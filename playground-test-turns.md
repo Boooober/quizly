@@ -22,7 +22,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 []
 ```
 
@@ -41,7 +42,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}]
 ```
 
@@ -60,7 +62,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Too tight, they pinch my temples"]}]
 ```
 
@@ -79,7 +82,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Too tight, they pinch my temples"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They slide down my nose constantly"]}]
 ```
 
@@ -98,7 +102,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Too tight, they pinch my temples"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They slide down my nose constantly"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["Driving and road trips", "Water, beach, boating, snow"]}]
 ```
 
@@ -117,7 +122,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Too tight, they pinch my temples"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They slide down my nose constantly"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["Driving and road trips", "Water, beach, boating, snow"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Classic dark, standard sun protection"]}]
 ```
 
@@ -136,7 +142,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Too tight, they pinch my temples"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They slide down my nose constantly"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["Driving and road trips", "Water, beach, boating, snow"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Classic dark, standard sun protection"]}, {"question": "Which design direction feels most like your personal style?", "answers": ["Timeless and classic (heritage shapes, aviators, wayfarers)", "Bold and architectural (heavy volume, sharp geometry, high-tech)", "Refined and sculptural (fine wire, or expressive curves)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Timeless and classic (heritage shapes, aviators, wayfarers)"]}]
 ```
 
@@ -155,7 +162,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Too tight, they pinch my temples"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They slide down my nose constantly"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["Driving and road trips", "Water, beach, boating, snow"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Classic dark, standard sun protection"]}, {"question": "Which design direction feels most like your personal style?", "answers": ["Timeless and classic (heritage shapes, aviators, wayfarers)", "Bold and architectural (heavy volume, sharp geometry, high-tech)", "Refined and sculptural (fine wire, or expressive curves)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Timeless and classic (heritage shapes, aviators, wayfarers)"]}, {"question": "Which of these feels closest to your taste?", "answers": ["Heritage & Timeless Vintage (Havana tortoise, retro panto, Riviera cool)", "Classic Aviation (Gold teardrop aviator with double brow bar)", "Effortless Mid-Century Cool (Crisp black acetate wayfarer)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Classic Aviation (Gold teardrop aviator with double brow bar)"]}]
 ```
 
@@ -165,9 +173,27 @@ Correct reply:
 {"nextQuestion": {"question": "How sensitive are you to frame weight on your face?", "answers": ["Must be featherlight \u2014 I dislike feeling frames", "I prefer a solid, substantial feel (feels premium)", "No strong preference"], "typeOfQuestion": "singleChoice"}}
 ```
 
-### Turn 9 (N=8): backend short-circuits
+### Turn 9 (N=8), expect `nextQuestion: null`
 
-`app.service.ts` returns `{"nextQuestion": null}` at N >= 8 without calling the agent, so there is no turn 9 to test. To check the agent agrees, paste the turn-8 message with the full 8-row history and confirm it replies `{"nextQuestion": null}`.
+```text
+TASK OVERRIDE. For this request only, ignore any output format described in your system instructions.
+Return exactly this JSON object and nothing else:
+{"nextQuestion": {"question": string, "answers": string[], "typeOfQuestion": "singleChoice" | "multiChoice"}}
+Return {"nextQuestion": null} if you have enough information.
+
+Your task: pick the single most useful next question for this user. Never repeat a question already asked.
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
+[{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About equal"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Too tight, they pinch my temples"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They slide down my nose constantly"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["Driving and road trips", "Water, beach, boating, snow"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Classic dark, standard sun protection"]}, {"question": "Which design direction feels most like your personal style?", "answers": ["Timeless and classic (heritage shapes, aviators, wayfarers)", "Bold and architectural (heavy volume, sharp geometry, high-tech)", "Refined and sculptural (fine wire, or expressive curves)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Timeless and classic (heritage shapes, aviators, wayfarers)"]}, {"question": "Which of these feels closest to your taste?", "answers": ["Heritage & Timeless Vintage (Havana tortoise, retro panto, Riviera cool)", "Classic Aviation (Gold teardrop aviator with double brow bar)", "Effortless Mid-Century Cool (Crisp black acetate wayfarer)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Classic Aviation (Gold teardrop aviator with double brow bar)"]}, {"question": "How sensitive are you to frame weight on your face?", "answers": ["Must be featherlight \u2014 I dislike feeling frames", "I prefer a solid, substantial feel (feels premium)", "No strong preference"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Must be featherlight \u2014 I dislike feeling frames"]}]
+```
+
+Correct reply:
+
+```json
+{"nextQuestion": null}
+```
+
+This turn is the real completion test: the agent must close the survey itself once the core sequence is covered and no triggered follow-up is left. `app.service.ts` only short-circuits at N >= 17, far past where a good funnel ends.
 
 ### Recommendation call
 
@@ -201,7 +227,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 []
 ```
 
@@ -220,7 +247,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}]
 ```
 
@@ -239,7 +267,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About right"]}]
 ```
 
@@ -258,7 +287,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About right"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They leave red pinch marks on my nose"]}]
 ```
 
@@ -277,7 +307,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About right"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They leave red pinch marks on my nose"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["City and everyday, commuting, terraces"]}]
 ```
 
@@ -296,7 +327,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About right"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They leave red pinch marks on my nose"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["City and everyday, commuting, terraces"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Fully dark, nobody sees my eyes"]}]
 ```
 
@@ -315,7 +347,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About right"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They leave red pinch marks on my nose"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["City and everyday, commuting, terraces"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Fully dark, nobody sees my eyes"]}, {"question": "Which design direction feels most like your personal style?", "answers": ["Timeless and classic (heritage shapes, aviators, wayfarers)", "Bold and architectural (heavy volume, sharp geometry, high-tech)", "Refined and sculptural (fine wire, or expressive curves)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Bold and architectural (heavy volume, sharp geometry, high-tech)"]}]
 ```
 
@@ -334,7 +367,8 @@ Return exactly this JSON object and nothing else:
 Return {"nextQuestion": null} if you have enough information.
 
 Your task: pick the single most useful next question for this user. Never repeat a question already asked.
-Questions asked so far and the answers the user selected, as JSON:
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
 [{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About right"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They leave red pinch marks on my nose"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["City and everyday, commuting, terraces"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Fully dark, nobody sees my eyes"]}, {"question": "Which design direction feels most like your personal style?", "answers": ["Timeless and classic (heritage shapes, aviators, wayfarers)", "Bold and architectural (heavy volume, sharp geometry, high-tech)", "Refined and sculptural (fine wire, or expressive curves)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Bold and architectural (heavy volume, sharp geometry, high-tech)"]}, {"question": "Which of these feels closest to your taste?", "answers": ["Architectural & Bold Brutalism (Heavy slab acetate, sharp geometric flat-top)", "Cybernetic & High-Tech (Matte carbon, high-wrap mono-shield)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Architectural & Bold Brutalism (Heavy slab acetate, sharp geometric flat-top)"]}]
 ```
 
@@ -344,9 +378,27 @@ Correct reply:
 {"nextQuestion": {"question": "Which frame color and metal finish best fits your signature style?", "answers": ["Classic Black or Dark Matte (sleek & versatile)", "Warm Tortoise or Gold Metals (rich & timeless)", "Cool Silver, Titanium, or Gunmetal (modern & crisp)", "Translucent Crystal or Expressive Tones (rose, amber, honey)"], "typeOfQuestion": "singleChoice"}}
 ```
 
-### Turn 9 (N=8): backend short-circuits
+### Turn 9 (N=8), expect `nextQuestion: null`
 
-`app.service.ts` returns `{"nextQuestion": null}` at N >= 8 without calling the agent, so there is no turn 9 to test. To check the agent agrees, paste the turn-8 message with the full 8-row history and confirm it replies `{"nextQuestion": null}`.
+```text
+TASK OVERRIDE. For this request only, ignore any output format described in your system instructions.
+Return exactly this JSON object and nothing else:
+{"nextQuestion": {"question": string, "answers": string[], "typeOfQuestion": "singleChoice" | "multiChoice"}}
+Return {"nextQuestion": null} if you have enough information.
+
+Your task: pick the single most useful next question for this user. Never repeat a question already asked.
+Return null once you have the signal you need; nothing else ends the survey.
+History, as JSON:
+[{"question": "Is your face longer than it is wide, or about equal?", "answers": ["Noticeably longer than wide", "About equal"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Noticeably longer than wide"]}, {"question": "How do one-size sunglasses usually fit your head width?", "answers": ["Too tight, they pinch my temples", "About right", "Too wide, they slide or look oversized"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["About right"]}, {"question": "What frustrates you most about sunglasses staying in place?", "answers": ["They slide down my nose constantly", "They leave red pinch marks on my nose", "They sit too high, above my eyebrows", "No issues, they fit fine"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["They leave red pinch marks on my nose"]}, {"question": "Where will you wear these most? Pick all that apply.", "answers": ["City and everyday, commuting, terraces", "Water, beach, boating, snow", "Driving and road trips", "Running, cycling, training"], "typeOfQuestion": "multiChoice", "selectedAnswers": ["City and everyday, commuting, terraces"]}, {"question": "How dark and private do you want the lenses?", "answers": ["Fully dark, nobody sees my eyes", "Classic dark, standard sun protection", "Lighter gradient, my eyes still read", "Tinted and expressive: amber, rose, blue"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Fully dark, nobody sees my eyes"]}, {"question": "Which design direction feels most like your personal style?", "answers": ["Timeless and classic (heritage shapes, aviators, wayfarers)", "Bold and architectural (heavy volume, sharp geometry, high-tech)", "Refined and sculptural (fine wire, or expressive curves)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Bold and architectural (heavy volume, sharp geometry, high-tech)"]}, {"question": "Which of these feels closest to your taste?", "answers": ["Architectural & Bold Brutalism (Heavy slab acetate, sharp geometric flat-top)", "Cybernetic & High-Tech (Matte carbon, high-wrap mono-shield)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Architectural & Bold Brutalism (Heavy slab acetate, sharp geometric flat-top)"]}, {"question": "Which frame color and metal finish best fits your signature style?", "answers": ["Classic Black or Dark Matte (sleek & versatile)", "Warm Tortoise or Gold Metals (rich & timeless)", "Cool Silver, Titanium, or Gunmetal (modern & crisp)", "Translucent Crystal or Expressive Tones (rose, amber, honey)"], "typeOfQuestion": "singleChoice", "selectedAnswers": ["Classic Black or Dark Matte (sleek & versatile)"]}]
+```
+
+Correct reply:
+
+```json
+{"nextQuestion": null}
+```
+
+This turn is the real completion test: the agent must close the survey itself once the core sequence is covered and no triggered follow-up is left. `app.service.ts` only short-circuits at N >= 17, far past where a good funnel ends.
 
 ### Recommendation call
 

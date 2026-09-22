@@ -10,7 +10,8 @@ import {
   RecommendationResponseDto,
 } from './quiz.dto';
 
-const MAX_QUESTIONS = 8; // ponytail: hard cap so the LLM cannot stretch the funnel; tune per conversion data
+// ponytail: runaway guard only, never a target length; the agent is expected to close the survey long before this
+const MAX_QUESTIONS = 17;
 
 // ponytail: copy of ../../sunglasses.jsonl so the Docker context stays apps/backend; re-copy when the catalog changes
 type CatalogItem = Record<string, unknown> & {
@@ -67,7 +68,7 @@ export class AppService {
       'Return {"nextQuestion": null} if you have enough information.',
       '',
       'Your task: pick the single most useful next question for this user. Never repeat a question already asked.',
-      `Questions asked so far: ${answers.length}`,
+      'Return null once you have the signal you need; nothing else ends the survey.',
       'History, as JSON:',
       JSON.stringify(answers),
     );

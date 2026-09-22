@@ -15,7 +15,7 @@ PROMPT = ROOT / 'pulumi/agent/prompt.md'
 CATALOG = ROOT / 'apps/backend/catalog/sunglasses.jsonl'
 
 # Mirrors app.service.ts: override() + MAX_QUESTIONS + PROMPT_FIELDS.
-MAX_QUESTIONS = 8
+MAX_QUESTIONS = 17
 QUESTION_SHAPE = ('{"nextQuestion": {"question": string, "answers": string[], '
                   '"typeOfQuestion": "singleChoice" | "multiChoice"}}')
 RECOMMEND_SHAPE = '{"heroId": string, "alternativeIds": [string, string], "why": [string, string, string]}'
@@ -72,7 +72,8 @@ def next_question_message(history):
     return override(QUESTION_SHAPE,
                     'Return {"nextQuestion": null} if you have enough information.', '',
                     'Your task: pick the single most useful next question for this user. Never repeat a question already asked.',
-                    'Questions asked so far and the answers the user selected, as JSON:',
+                    'Return null once you have the signal you need; nothing else ends the survey.',
+                    'History, as JSON:',
                     json.dumps(history))
 
 def recommend_message(history):
@@ -110,8 +111,16 @@ for name, script in PERSONAS.items():
         print(json.dumps({'nextQuestion': {k: q[k] for k in ('question', 'answers', 'typeOfQuestion')}}))
         print("```\n")
         history.append(turn(q, picks))
-    print(f"### Turn {MAX_QUESTIONS + 1} (N={MAX_QUESTIONS}): backend short-circuits\n")
-    print(f"`app.service.ts` returns `{{\"nextQuestion\": null}}` at N >= {MAX_QUESTIONS} without calling the agent, so there is no turn {MAX_QUESTIONS + 1} to test. To check the agent agrees, paste the turn-{MAX_QUESTIONS} message with the full 8-row history and confirm it replies `{{\"nextQuestion\": null}}`.\n")
+    n = len(script)
+    print(f"### Turn {n + 1} (N={n}), expect `nextQuestion: null`\n")
+    print("```text")
+    print(next_question_message(history))
+    print("```\n")
+    print("Correct reply:\n")
+    print("```json")
+    print(json.dumps({'nextQuestion': None}))
+    print("```\n")
+    print(f"This turn is the real completion test: the agent must close the survey itself once the core sequence is covered and no triggered follow-up is left. `app.service.ts` only short-circuits at N >= {MAX_QUESTIONS}, far past where a good funnel ends.\n")
     print(f"### Recommendation call\n")
     print("```text")
     print(recommend_message(history))

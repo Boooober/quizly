@@ -25,7 +25,7 @@ export class AppController {
   @ApiOperation({
     summary: 'Next survey question',
     description:
-      'Send every question asked so far with the answers the user selected. Send [] to start. Returns the next question, or nextQuestion: null when the survey is complete (agent decided, or 8 questions reached). Then call /quiz/recommend.',
+      'Send every question asked so far with the answers the user selected. Send [] to start. Returns the next question, or nextQuestion: null once the agent decides it has enough signal. The funnel has no fixed length; 17 answered questions is a hard backstop. Then call /quiz/recommend.',
   })
   @ApiBody({ type: [AnsweredQuestionDto] })
   @ApiOkResponse({ type: NextQuestionResponseDto })

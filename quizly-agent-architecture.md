@@ -5,7 +5,7 @@
 Quizly is an adaptive, conversion-focused eyewear consultation platform designed to maximize sunglasses sales. Instead of a static questionnaire, Quizly uses a turn-by-turn AI consultation agent running on Vertex AI Agent Runtime (Reasoning Engine) to dynamically formulate each subsequent question based on the customer's prior responses. 
 
 The architecture strictly decouples **diagnostic consultation** from **product matching & offer generation**:
-- **The Quizly Agent**: Acts as an elite optical stylist. It asks questions with high diagnostic precision across 5 pillars (Cephalometrics, Ergonomics, Lens Optics, Style Semiotics, Commercial) to maximize buyer confidence and extract high-fidelity fit parameters (8 questions total).
+- **The Quizly Agent**: Acts as an elite optical stylist. It asks questions with high diagnostic precision across 5 pillars (Cephalometrics, Ergonomics, Lens Optics, Style Semiotics, Commercial) to maximize buyer confidence and extract high-fidelity fit parameters. The agent decides how many questions that takes; the funnel has no fixed length.
 - **The Downstream Recommendation & VTO Engine**: Takes the completed diagnostic profile, matches the #1 hero sunglasses and runner-up pairs from the catalog (`sunglasses.jsonl`), generates personalized "Why It Fits You" conversion rationales, and renders the 2D MediaPipe Visual Try-On (VTO) overlay.
 
 ---
@@ -34,7 +34,7 @@ flowchart TD
 
 ---
 
-### 3. Step-by-Step Diagnostic Decision Loop (8 Question Funnel)
+### 3. Step-by-Step Diagnostic Decision Loop (Open-Ended Funnel)
 
 Each turn executes the following cycle:
 
@@ -42,7 +42,7 @@ Each turn executes the following cycle:
 [User Answers Array: AnsweredQuestionDto[]] 
                       │
                       ▼
- 1. Evaluate Question Count (N) & Stopping Criteria
+ 1. Evaluate Signal Coverage & Stopping Criteria
     - If N < 7: STRICTLY CONTINUE (Cannot return null)
     - If N >= 15: STRICTLY TERMINATE (Return nextQuestion: null)
     - If 7 <= N < 15: Check Pillar Completeness
@@ -148,7 +148,7 @@ export class QuestionDto {
 }
 ```
 
-*Example B (Survey Complete after 8 Questions):*
+*Example B (Survey Complete, the agent has the signal it needs):*
 ```json
 {
   "nextQuestion": null

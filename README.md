@@ -49,7 +49,7 @@ Send an array of all questions asked so far and the user's selected answers (sen
 ```
 
 #### Response: `NextQuestionResponseDto`
-Returns the next question to ask, or `nextQuestion: null` when the diagnostic survey is complete (8 questions):
+Returns the next question to ask, or `nextQuestion: null` once the agent decides the diagnostic survey is complete. The funnel has no fixed length, so the client never knows the total up front. A hard backstop of 17 answered questions lives in `app.service.ts` for runaway turns only:
 ```json
 {
   "nextQuestion": {
