@@ -88,11 +88,8 @@ flowchart TD
 | **Q4.0: Projected Energy** | *"When you put on sunglasses, what energy do you want to project before saying a word?"* | • **Approachable, warm, easy to talk to** (`persona_approachable`)<br>• **Effortlessly composed & understated** (`persona_understated`)<br>• **Commanding, mysterious, untouchable** (`persona_commanding`)<br>• **Creative, artistic, unapologetically bold** (`persona_expressive`) | • **Approachable**: Luminous gradient / Cat 1–2 tint ($\text{VLT } 25\text{–}40\%$), curvilinear rims to preserve FFA eye gaze.<br>• **Understated**: Minimalist wire / balanced panto, matte finish.<br>• **Commanding**: Cat 3/4 Obsidian, rigid flat-top browline (amplifies supraorbital threat cues, blocks STS).<br>• **Creative**: Unconventional geometry (geometric hex, high-rake cat-eye, dichroic visor). |
 | **Q4.1: Social Signaling & Tint** | *"How dark and private do you want the lenses?"* | • **Fully dark, nobody sees eyes** (`tint_opaque`)<br>• **Classic dark, standard protection** (`tint_classic`)<br>• **Lighter gradient, eyes still read** (`tint_gradient`)<br>• **Expressive tint: amber, rose, blue** (`tint_expressive`) | • **Opaque**: Cat 3/4 Obsidian ($\text{VLT } < 10\%$). Enforces stoic unilateral gaze, disables STS eye-tracking.<br>• **Classic**: Cat 3 G-15/Grey ($\text{VLT } 12\text{–}15\%$).<br>• **Gradient**: $\text{VLT } 25\text{–}40\%$, preserves Fusiform Face Area (FFA) emotional microexpression exchange.<br>• **Expressive**: High VLT ($40\text{–}70\%$), high chromatic resonance. |
 | **Q4.1b: Visual Volume** | *"Do you want your sunglasses to blend with your features, or be the centerpiece?"* | • **Harmonious extension (subtle, complements natural contours)** (`presence_subtle`)<br>• **The focal point (distinct statement defining my look)** (`presence_statement`) | • **Subtle**: Ultralight wire ($1.0\text{–}2.5\text{mm}$ gauge), rimless or neutral tones.<br>• **Statement**: Bold slab acetate ($8.0\text{–}12.0\text{mm}$ gauge), sharp 3D skiving/bevels, high figure-ground contrast. |
-| **Q4.2a: Archetype Pair 1** | *"Which pair would you actually wear?"* | • **Havana tortoise heritage panto** (`axis_heritage`)<br>• **Matte carbon mono-shield** (`axis_cybernetic`) | Routes to **Heritage Lineage** vs **Cybernetic / High-Wrap Futurism**. |
-| **Q4.2b: Archetype Pair 2** | *"And between these two?"* | • **Heavy slab acetate flat-top** (`axis_architectural`)<br>• **Featherweight titanium wire round** (`axis_minimalist`) | Routes to **Brutalist / Architectural Mass** vs **Bauhaus / Minimalist Wire**. |
-| **Q4.2c: Archetype Pair 3** | *"Pick the one you'd grab on the way out."* | • **Upswept honey crystal cat-eye** (`axis_sensual`)<br>• **Wraparound sport shield** (`axis_technical`) | Routes to **Sensual / Sculptural Curvature** vs **Kinetic Athletic Wrap**. |
-| **Q4.2d: Archetype Pair 4** | *"Last one. Which reads more like you?"* | • **Gold teardrop aviator** (`axis_aviator`)<br>• **Black acetate wayfarer** (`axis_wayfarer`) | Routes to **Utilitarian Aviation Teardrop** vs **Mid-Century Acetate Icon**. |
-| **Q4.3: Mirror Coating** | *"Mirrored, or plain tint?"* | • **Silver flash mirror** (`lens_mirror`)<br>• **Plain G-15 tint** (`lens_plain`) | • **Mirror**: Quarter-wave dielectric coating; high psychological shielding.<br>• **Plain**: Pure absorption; authentic organic tint. |
+| **Q4.2: Design Lineage & Aesthetic Vibe** | *"Which design aesthetic feels most like your personal style?"* | • **Heritage & Timeless Vintage (Havana tortoise, retro panto)** (`axis_heritage`)<br>• **Architectural & Bold Brutalism (Heavy slab acetate, flat-top)** (`axis_architectural`)<br>• **Minimalist & Intellectual (Featherweight titanium wire round)** (`axis_minimalist`)<br>• **Sensual & Sculptural (Upswept cat-eye, crystal tones)** (`axis_sensual`)<br>• **Cybernetic & High-Tech (Matte carbon, mono-shield wrap)** (`axis_cybernetic`)<br>• **Classic Aviation (Gold teardrop aviator)** (`axis_aviator`)<br>• **Effortless Mid-Century (Crisp black acetate wayfarer)** (`axis_wayfarer`) | Maps directly to archetypal design lineages (Module 7) and physical silhouette families. |
+| **Q4.3: Lens Finish & Mirror Coating** | *"Do you prefer a reflective mirror finish, or classic plain tint?"* | • **Reflective flash mirror (high privacy & glare block)** (`lens_mirror`)<br>• **Classic plain tint (natural look, non-reflective)** (`lens_plain`)<br>• **Subtle semi-reflective sheen** (`lens_semi_mirror`) | • **Mirror**: Quarter-wave dielectric coating; maximum psychological shielding.<br>• **Plain**: Pure photopic absorption; authentic organic look.<br>• **Semi-Mirror**: Balanced subtle sheen. |
 | **Q4.4: Long-Term Priorities** | *"What matters most in a pair you'd keep for years? Pick all that apply."* | • **Lens quality & protection** (`priority_optics`)<br>• **A fit that stays put** (`priority_fit`)<br>• **The look** (`priority_style`)<br>• **Price** (`priority_price`) | Calibrates algorithmic match weighting across durability, optics, and aesthetic scoring. |
 | **Q4.5: Color & Finish Palette** | *"Which frame color and metal finish best fits your signature style?"* | • **Classic Black or Dark Matte** (`palette_black_monochrome`)<br>• **Warm Tortoise or Gold Metals** (`palette_tortoise_gold`)<br>• **Cool Silver, Titanium, Gunmetal** (`palette_silver_titanium`)<br>• **Translucent Crystal or Expressive Tones** (`palette_crystal_expressive`) | Dictates material finishes: Takiron black acetate vs 18K gold electroplate vs brushed titanium vs jewel crystal. |
 | **Q4.6: Branding & Logo Semiotics** | *"How do you feel about visible logos and branding on your frames?"* | • **Zero logos — quiet luxury** (`branding_minimal_quiet`)<br>• **Subtle micro-engravings / hardware** (`branding_subtle_details`)<br>• **Bold logo or signature icon** (`branding_statement`) | Filters quiet luxury / artisanal unbranded models vs visible prestige hardware markers. |
@@ -147,7 +144,7 @@ When the onboarding completes, Quizly dynamically constructs a 4-part personaliz
 
 ## 4. Machine-Readable Question Catalog (JSON)
 
-Complete 35-question onboarding questionnaire ready for Vertex AI Agent Builder and frontend rendering engines:
+Complete 32-question onboarding questionnaire ready for Vertex AI Agent Builder and frontend rendering engines:
 
 ```json
 [
@@ -399,53 +396,29 @@ Complete 35-question onboarding questionnaire ready for Vertex AI Agent Builder 
     ]
   },
   {
-    "id": "Q4.2a",
+    "id": "Q4.2",
     "pillar": "style_semiotics",
-    "question": "Which pair would you actually wear?",
-    "type": "image_pair",
+    "question": "Which design aesthetic feels most like your personal style?",
+    "type": "single_choice",
     "choices": [
-      { "label": "Havana tortoise heritage panto", "value": "axis_heritage", "image": "archetype/heritage_panto_havana.jpg" },
-      { "label": "Matte carbon mono-shield", "value": "axis_cybernetic", "image": "archetype/cyber_monoshield_matte.jpg" }
-    ]
-  },
-  {
-    "id": "Q4.2b",
-    "pillar": "style_semiotics",
-    "question": "And between these two?",
-    "type": "image_pair",
-    "choices": [
-      { "label": "Heavy slab acetate flat-top", "value": "axis_architectural", "image": "archetype/brutalist_slab_flattop.jpg" },
-      { "label": "Featherweight titanium wire round", "value": "axis_minimalist", "image": "archetype/minimal_titanium_round.jpg" }
-    ]
-  },
-  {
-    "id": "Q4.2c",
-    "pillar": "style_semiotics",
-    "question": "Pick the one you'd grab on the way out.",
-    "type": "image_pair",
-    "choices": [
-      { "label": "Upswept honey crystal cat-eye", "value": "axis_sensual", "image": "archetype/sensual_cateye_honey.jpg" },
-      { "label": "Wraparound sport shield", "value": "axis_technical", "image": "archetype/sport_wrap_mirror.jpg" }
-    ]
-  },
-  {
-    "id": "Q4.2d",
-    "pillar": "style_semiotics",
-    "question": "Last one. Which reads more like you?",
-    "type": "image_pair",
-    "choices": [
-      { "label": "Gold teardrop aviator", "value": "axis_aviator", "image": "archetype/aviator_gold_g15.jpg" },
-      { "label": "Black acetate wayfarer", "value": "axis_wayfarer", "image": "archetype/wayfarer_black_smoke.jpg" }
+      { "label": "Heritage & Timeless Vintage (Havana tortoise, retro panto, Riviera cool)", "value": "axis_heritage" },
+      { "label": "Architectural & Bold Brutalism (Heavy slab acetate, sharp geometric flat-top)", "value": "axis_architectural" },
+      { "label": "Minimalist & Intellectual (Featherweight titanium wire, clean Bauhaus circles)", "value": "axis_minimalist" },
+      { "label": "Sensual & Sculptural (Upswept cat-eye, translucent honey crystals)", "value": "axis_sensual" },
+      { "label": "Cybernetic & High-Tech (Matte carbon, high-wrap mono-shield)", "value": "axis_cybernetic" },
+      { "label": "Classic Aviation (Gold teardrop aviator with double brow bar)", "value": "axis_aviator" },
+      { "label": "Effortless Mid-Century Cool (Crisp black acetate wayfarer)", "value": "axis_wayfarer" }
     ]
   },
   {
     "id": "Q4.3",
     "pillar": "style_semiotics",
-    "question": "Mirrored, or plain tint?",
-    "type": "image_pair",
+    "question": "Do you prefer a reflective mirror finish, or classic plain tint?",
+    "type": "single_choice",
     "choices": [
-      { "label": "Silver flash mirror", "value": "lens_mirror", "image": "lens/silver_flash_mirror.jpg" },
-      { "label": "Plain G-15 tint", "value": "lens_plain", "image": "lens/g15_plain_tint.jpg" }
+      { "label": "Reflective flash mirror (high privacy & maximum glare block)", "value": "lens_mirror" },
+      { "label": "Classic plain tint (natural, clean look without reflection)", "value": "lens_plain" },
+      { "label": "Subtle semi-reflective sheen", "value": "lens_semi_mirror" }
     ]
   },
   {
