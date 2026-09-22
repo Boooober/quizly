@@ -2,7 +2,11 @@
 ## GCP Hackathon Architecture & Fast-Track Implementation Guide
 
 ### 1. Executive Summary & Core Mechanism
-Quizly is an adaptive, conversion-focused quiz agent designed to maximize sunglasses sales. Instead of a static questionnaire, Quizly dynamically formulates each next question based on the user's previous answers, maintaining an internal **User Fit Profile** and calculating **Information Gain** to eliminate catalog mismatches while creating a hyperpersonalized, high-trust buying experience.
+Quizly is an adaptive, conversion-focused eyewear consultation platform designed to maximize sunglasses sales. Instead of a static questionnaire, Quizly uses a turn-by-turn AI consultation agent running on Vertex AI Agent Runtime (Reasoning Engine) to dynamically formulate each subsequent question based on the customer's prior responses. 
+
+The architecture strictly decouples **diagnostic consultation** from **product matching & offer generation**:
+- **The Quizly Agent**: Acts as an elite optical stylist. It asks questions with high diagnostic precision across 4 pillars (Cephalometrics, Ergonomics, Lens Optics, Style Semiotics) to maximize buyer confidence and extract high-fidelity fit parameters (7 to 15 questions total).
+- **The Downstream Recommendation & VTO Engine**: Takes the completed diagnostic profile, matches the #1 hero sunglasses and runner-up pairs from the catalog (`sunglasses.jsonl`), generates personalized "Why It Fits You" conversion rationales, and renders the 2D MediaPipe Visual Try-On (VTO) overlay.
 
 ---
 
@@ -10,176 +14,197 @@ Quizly is an adaptive, conversion-focused quiz agent designed to maximize sungla
 
 ```mermaid
 flowchart TD
-    User["User / Mobile Browser"]
-    Gateway["Google Cloud API Gateway"]
-    AgentBuilder["Vertex AI Agent Builder (Playbook)"]
-    Datastore["Agent Builder Datastore (Sunglasses Catalog JSONL/CSV)"]
-    GeminiVision["Gemini 2.0 Flash (Multimodal Selfie Analyzer)"]
-    
-    User -->|"1. Optional Selfie / Start Quiz"| Gateway
-    Gateway -->|"Analyze Face Shape & Skin Tone"| GeminiVision
-    GeminiVision -->|"Face: Oval, Bridge: Low, Tone: Warm"| Gateway
-    
-    User -->|"2. Submit Answer (Session ID, Answer)"| Gateway
-    Gateway -->|"3. Converse API (Detect Intent / Step)"| AgentBuilder
-    AgentBuilder <-->|"Grounding / Product Matching"| Datastore
-    AgentBuilder -->|"4. Structured JSON (Card, Reaction, Options)"| Gateway
-    Gateway -->|"5. Render Dynamic Card / Confidence Meter"| User
-    
-    AgentBuilder -->|"Confidence >= 85% or Q7-Q15"| User
+    User["User / Mobile Client"]
+    Backend["NestJS Backend (Cloud Run)"]
+    Agent["Vertex AI Agent Engine (quizly-agent / Gemini 2.5 Flash)"]
+    Recommender["Downstream Recommender & Catalog Engine"]
+    Datastore["Catalog Datastore (sunglasses.jsonl in GCS)"]
+    VTO["MediaPipe 2D VTO & Gemini Selfie Analyzer"]
+
+    User -->|"1. Submit Answer: POST /quiz/submit-answer (AnsweredQuestionDto[])"| Backend
+    Backend -->|"2. async_stream_query (streamQuery?alt=sse)"| Agent
+    Agent -->|"3. JSON: { nextQuestion: QuestionDto | null }"| Backend
+    Backend -->|"4. Return NextQuestionResponseDto"| User
+
+    User -->|"5. On nextQuestion == null (Quiz Complete)"| Recommender
+    Recommender <-->|"6. Match against 20 Catalog Archetypes"| Datastore
+    Recommender -->|"7. Hero Product + Personalized Why + Discount"| User
+    VTO -->|"8. Client-side Real-Time Canvas Overlay"| User
 ```
 
 ---
 
-### 3. Step-by-Step Agent Decision Loop (Information Gain)
+### 3. Step-by-Step Diagnostic Decision Loop (7–15 Question Funnel)
 
-Each turn executes the following cycle in milliseconds:
+Each turn executes the following cycle:
 
 ```
-[User Answer] 
-      │
-      ▼
-1. Update User Fit Profile (State Machine)
-   - Face Shape (Round, Square, Oval, Heart, Oblong)
-   - Primary Activities (Driving, Water sports, Running, Everyday fashion)
-   - Fit Pain Points (Slips down nose, Pinches temples, Eyelashes hit lens)
-   - Technical Specs (Polarized, UV400, Gradient, Blue light, High-index)
-   - Aesthetic Vibe (Classic Aviator, Bold Wayfarer, Retro Clubmaster, Sport wrap)
-   - Budget Range ($80-$150, $150-$250, Luxury $250+)
-      │
-      ▼
-2. Evaluate Catalog Narrowing & Confidence Score
-   - Confidence = 1 - (Entropy of remaining top candidates)
-   - If Confidence >= 0.85 OR Question Count >= 15:
-       -> Trigger Final Recommendation Screen
-      │
-      ▼
-3. Determine Next Missing Dimension with Highest Impact
-   - Select the unpopulated trait that most divides the candidate pool.
-      │
-      ▼
-4. Generate Hyperpersonalized Question Card
-   - [Reaction]: Empathetic acknowledgement of previous choice.
-   - [Question]: Phrased in direct context of their past answers.
-   - [Options]: 3-4 clickable chips dynamically tailored to their scenario.
+[User Answers Array: AnsweredQuestionDto[]] 
+                      │
+                      ▼
+ 1. Evaluate Question Count (N) & Stopping Criteria
+    - If N < 7: STRICTLY CONTINUE (Cannot return null)
+    - If N >= 15: STRICTLY TERMINATE (Return nextQuestion: null)
+    - If 7 <= N < 15: Check Pillar Completeness
+                      │
+                      ▼
+ 2. Information Gain Across 4 Ontological Pillars
+    - Pillar 1: Face Shape & Cephalometrics (Ratio, Jawline, Width, Bridge)
+    - Pillar 2: Past Pain Points & Ergonomics (Slipping, Pinching, Cheek clearance)
+    - Pillar 3: Lifestyle & Optical Environments (Glare, Driving, Water, High UV)
+    - Pillar 4: Style Archetype & Semiotics (Lineage, Presence, Lens privacy)
+                      │
+                      ▼
+ 3. Select Next Question (Fulfills QuestionDto contract)
+    - "binary": Exactly 2 answers
+    - "singleChoice": 2 to 4 answers
+    - "multiChoice": Exactly 4 answers
+                      │
+                      ▼
+ 4. Return Output Payload to Backend
+    - { "nextQuestion": QuestionDto }
+    - (Or { "nextQuestion": null } if survey complete)
 ```
 
 ---
 
-### 4. Datastore Schema (Sunglasses Catalog)
-To ingest into Vertex AI Agent Builder in under 5 minutes, format the catalog as a JSONL file in Google Cloud Storage (`gs://quizly-catalog/sunglasses.jsonl`):
+### 4. Official API Data Transfer Objects (DTOs)
 
-```json
-{
-  "id": "sg-aviator-polar-01",
-  "title": "The Coastal Navigator Polarized",
-  "brand": "Quizly Optics",
-  "price": 149.00,
-  "face_shapes": ["Square", "Oval", "Heart"],
-  "frame_material": "Titanium & Lightweight Acetate",
-  "bridge_fit": "Adjustable Silicone Nose Pads (Anti-Slip)",
-  "lens_type": "Polarized Category 3 UV400",
-  "best_for": ["Driving", "Boating", "Beach", "Anti-Glare"],
-  "solves_pain_points": ["Sliding down nose", "Temple pinching", "Bright water/road glare"],
-  "aesthetic": "Classic Aviator / Modern Luxury",
-  "image_url": "https://storage.googleapis.com/quizly-catalog/images/navigator.jpg",
-  "conversion_hook": "Engineered with anti-slip silicone pads and Japanese polarized lenses to eliminate driving glare completely."
+The backend exposes `POST /quiz/submit-answer` implemented in [`apps/backend/src/app.controller.ts`](file:///Users/illia.kazachkovskyi/Documents/Illia%20Project/quizly/apps/backend/src/app.controller.ts) using the TypeScript contracts defined in [`apps/backend/src/quiz.dto.ts`](file:///Users/illia.kazachkovskyi/Documents/Illia%20Project/quizly/apps/backend/src/quiz.dto.ts):
+
+#### Supported Question Types
+```typescript
+export const QUESTION_TYPES = [
+  'binary',
+  'multiChoice',
+  'singleChoice',
+] as const;
+export type QuestionType = (typeof QUESTION_TYPES)[number];
+```
+
+#### Request Payload: `AnsweredQuestionDto[]`
+The frontend sends an array containing every question asked so far along with the user's selected answers (send `[]` to initiate turn 1):
+
+```typescript
+export class AnsweredQuestionDto {
+  question: string;
+  answers: string[];
+  typeOfQuestion: 'binary' | 'singleChoice' | 'multiChoice';
+  selectedAnswers: string[];
 }
 ```
 
----
-
-### 5. Playbook Prompt Template (Vertex AI Agent Builder)
-
-Configure the Playbook with the following instructions:
-
-```text
-You are Quizly, an elite AI optical stylist and sunglasses sales specialist.
-Your goal is to guide the user through an engaging, hyperpersonalized quiz (7 to 15 questions) and recommend the single best pair of sunglasses from the catalog datastore that guarantees purchase conversion.
-
-RULES:
-1. Maintain an internal User Fit Profile across turns:
-   - face_shape
-   - primary_activities
-   - past_fit_complaints
-   - lens_preferences
-   - aesthetic_vibe
-   - budget
-2. After every user answer:
-   - Provide a short empathetic validation (1-2 sentences) acknowledging their specific choice.
-   - Identify the highest-priority missing profile attribute.
-   - Output the next question tailored to their exact prior answers.
-   - Provide 3 to 4 distinct, clickable multiple-choice options.
-3. If recommendation confidence reaches >= 85% after at least 7 questions (or reaching question 15):
-   - Query the Datastore for the #1 Hero Match and 2 Alternative Matches.
-   - Return the "final_recommendation" payload with a persuasive, personalized "Why this fits you" rationale.
-
-RESPONSE FORMAT:
-Always return valid JSON matching this schema:
-{
-  "question_number": 3,
-  "confidence_score": 0.65,
-  "reaction": "Dealing with sunglasses sliding down during a drive is so frustrating—that usually means standard acetate bridges lack grip.",
-  "question_text": "To keep your new pair locked comfortably in place, what frame and nose-pad style do you prefer?",
-  "options": [
-    {"label": "Adjustable silicone nose pads (Zero slip guarantee)", "value": "silicone_pads"},
-    {"label": "Ultra-lightweight titanium frame (No nose indentations)", "value": "titanium_light"},
-    {"label": "Curved sport-wrap temples (Locks behind ears)", "value": "sport_temples"}
-  ],
-  "is_final": false,
-  "recommendation": null
-}
-```
-
----
-
-### 6. Final Conversion Screen Payload (Closing the Sale)
-
-When `is_final` is `true`:
+*Example HTTP Request Body:*
 ```json
-{
-  "is_final": true,
-  "confidence_score": 0.94,
-  "reaction": "We've analyzed your face profile, driving habits, and fit complaints. We found your 94% match!",
-  "recommendation": {
-    "hero_product": {
-      "id": "sg-aviator-polar-01",
-      "title": "The Coastal Navigator Polarized",
-      "price": 149.00,
-      "discount_price": 126.65,
-      "promo_code": "CUSTOMFIT15",
-      "image_url": "https://storage.googleapis.com/quizly-catalog/images/navigator.jpg",
-      "personalized_why": [
-        "Square Face Softening: The subtle teardrop curvature balances your defined jawline.",
-        "Anti-Slip Solution: Medical-grade silicone nose pads resolve the slipping you experienced with past pairs.",
-        "Glare Elimination: Dual-coated polarized lenses protect against the blinding highway glare you mentioned."
-      ],
-      "cta_text": "Claim My Pair (15% Off Applied)"
-    },
-    "alternative_products": [
-      {"id": "sg-wayfarer-02", "title": "The Maverick Bold", "price": 139.00},
-      {"id": "sg-titan-03", "title": "The Featherweight Minimalist", "price": 169.00}
+[
+  {
+    "question": "Is your face noticeably longer than it is wide, or about equal?",
+    "answers": [
+      "Noticeably longer than wide",
+      "About equal in length and width"
+    ],
+    "typeOfQuestion": "binary",
+    "selectedAnswers": [
+      "Noticeably longer than wide"
     ]
+  },
+  {
+    "question": "What frustrates you most about sunglasses staying in place?",
+    "answers": [
+      "They slide down my nose constantly",
+      "They leave red pinch marks on my nose",
+      "They sit too high above my eyebrows",
+      "No issues, they fit fine"
+    ],
+    "typeOfQuestion": "singleChoice",
+    "selectedAnswers": [
+      "They slide down my nose constantly"
+    ]
+  }
+]
+```
+
+#### Response Payload: `NextQuestionResponseDto`
+```typescript
+export class NextQuestionResponseDto {
+  nextQuestion: QuestionDto | null;
+}
+
+export class QuestionDto {
+  question: string;
+  answers: string[];
+  typeOfQuestion: 'binary' | 'singleChoice' | 'multiChoice';
+}
+```
+
+*Example A (Next Question):*
+```json
+{
+  "nextQuestion": {
+    "question": "Where will you wear these most? Pick all that apply.",
+    "answers": [
+      "City & everyday commuting",
+      "Driving & road trips",
+      "Water, beach, boating & snow glare",
+      "Running, cycling & training"
+    ],
+    "typeOfQuestion": "multiChoice"
   }
 }
 ```
 
+*Example B (Survey Complete after 7–15 Questions):*
+```json
+{
+  "nextQuestion": null
+}
+```
+
 ---
 
-### 7. Hackathon Execution Checklist (Build in 3 Hours)
+### 5. Datastore Schema (Sunglasses Catalog)
 
-1. **Hour 1: Data & Agent Builder Setup**
-   - Create a JSONL of 12-15 diverse sunglasses models.
-   - Upload to Google Cloud Storage (`gs://quizly-sunglasses-bucket`).
-   - Create an Agent Builder Datastore (Search & Conversation) connected to the bucket.
-   - Create a Playbook in Vertex AI Agent Builder with the prompt and JSON schema above.
+The product catalog contains 20 curated sunglasses archetypes stored as JSONL in Google Cloud Storage (`gs://quizly-catalog/sunglasses.jsonl`). Each product has complete cephalometric specs, pain point mappings, and conversion hooks:
 
-2. **Hour 2: Google Cloud API Gateway & Selfie Vision**
-   - Configure GCP API Gateway with an OpenAPI spec pointing to Vertex AI Agent Builder Sessions API.
-   - Add a Gemini 2.0 Flash function for selfie face shape detection (`gemini-2.0-flash` vision prompt: "Identify face shape: oval/round/square/heart/oblong, bridge type, skin undertone in JSON").
+```json
+{
+  "id": "sg-01-navigator-polar",
+  "title": "The Coastal Navigator Polarized",
+  "brand": "Quizly Optics",
+  "price": 149.00,
+  "currency": "USD",
+  "face_shapes": ["Square", "Oval", "Heart"],
+  "frame_width_mm": 142,
+  "frame_size": "Standard",
+  "weight_grams": 16.5,
+  "frame_material": "Japanese Beta-Titanium with Acetate Rims",
+  "bridge_architecture": "Adjustable Medical-Grade Silicone Nose Pads",
+  "lens_type": "Polarized Category 3 Triacetate Cellulose (TAC)",
+  "lens_tint": "Deep G-15 Olive Green with Dual Anti-Reflective Coating",
+  "aesthetic_archetype": "Nostalgia / Aviation Heritage",
+  "best_for_activities": ["Highway Driving", "Coastal Boating", "Beach Relaxation"],
+  "solves_pain_points": [
+    "Sliding down nose during perspiration",
+    "Blinding sun glare bouncing off pavement or water",
+    "Temple pinching behind the ears"
+  ],
+  "conversion_hook": "Engineered with featherlight titanium and micro-ribbed silicone pads that lock in place without pinching, paired with dual-layer polarized lenses that erase driving glare instantly.",
+  "pitch_bullet_points": [
+    "Teardrop Aviator Geometry: Curvilinear lower rim balances and softens defined square jawlines.",
+    "Zero-Slip Silicone Grip: High-friction medical-grade pads prevent slippage even during humid summer heat.",
+    "Glare-Cutting Polarized Optics: Category 3 lenses deliver razor-sharp contrast and stop squinting headaches."
+  ]
+}
+```
 
-3. **Hour 3: Frontend Interactive Cards & Demo Flow**
-   - Build a clean responsive single-page quiz:
-     - Header: "Quizly — Find Your Custom Fit" + dynamic confidence bar.
-     - Center Card: Agent's reaction badge + personalized question text + animated option buttons.
-     - Results view: Product photo + 3 personalized "Why it fits you" bullet points + discount banner + "Buy Now".
+---
+
+### 6. Downstream Recommendation & Conversion Handoff
+
+When `nextQuestion` is `null`, the client or backend triggers the conversion matching engine:
+1. **Scoring & Ranking**: Scores the 20 catalog products against the user's answers across face proportions, solved pain points, lens requirements, and aesthetic preference.
+2. **Hero Offer Presentation**:
+   - Displays the #1 Hero product match + 2 alternative pairs.
+   - 3 personalized "Why It Fits You" bullet points resolving their specific pain points.
+   - Interactive 2D Visual Try-On (VTO) using MediaPipe landmarks.
+   - Exclusive checkout incentive (e.g. `CUSTOMFIT15` for 15% off).

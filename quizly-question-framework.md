@@ -142,9 +142,36 @@ When the onboarding completes, Quizly dynamically constructs a 4-part personaliz
 
 ---
 
-## 4. Machine-Readable Question Catalog (JSON)
+## 4. Backend DTO Schema & Machine-Readable Question Catalog
 
-Complete 32-question onboarding questionnaire ready for Vertex AI Agent Builder and frontend rendering engines:
+The questions in this framework map directly to the backend NestJS DTOs defined in [`apps/backend/src/quiz.dto.ts`](file:///Users/illia.kazachkovskyi/Documents/Illia%20Project/quizly/apps/backend/src/quiz.dto.ts):
+
+### Official Question DTO Schema
+```typescript
+export const QUESTION_TYPES = [
+  'binary',       // Exactly 2 answers (e.g. Yes/No, or 2 contrasting options)
+  'multiChoice',  // Exactly 4 answers (multiple selection supported)
+  'singleChoice', // 2 to 4 answers (single selection)
+] as const;
+export type QuestionType = (typeof QUESTION_TYPES)[number];
+
+export class QuestionDto {
+  question: string;
+  answers: string[];
+  typeOfQuestion: QuestionType;
+}
+
+export class AnsweredQuestionDto extends QuestionDto {
+  selectedAnswers: string[];
+}
+
+export class NextQuestionResponseDto {
+  nextQuestion: QuestionDto | null; // null when 7-15 questions completed
+}
+```
+
+### Complete 32-Question Diagnostic Catalog (JSON)
+Complete onboarding questionnaire ready for the agent prompt, frontend rendering, and backend validation:
 
 ```json
 [
