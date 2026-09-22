@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, RotateCcw } from 'lucide-react';
 import { useOnboardingStore } from '../store/useOnboardingStore';
-import { mockOnboardingSteps } from '../data/mockSteps';
 import { pigmentForIndex } from '../theme/pigments';
+import { questionToStep } from '../utils/questionToStep';
 import { QuestionHeader } from './QuestionHeader';
 import { SingleSelectStep } from './SingleSelectStep';
 import { MultiSelectStep } from './MultiSelectStep';
@@ -11,12 +11,36 @@ import { OnboardingCompleted } from './OnboardingCompleted';
 import { PayloadInspector } from './PayloadInspector';
 
 export const OnboardingShell: React.FC = () => {
-  const { currentStepIndex, isComplete, goToPreviousStep, resetOnboarding } =
-    useOnboardingStore();
+  const {
+    currentQuestion,
+    questionNumber,
+    totalQuestions,
+    history,
+    status,
+    error,
+    isComplete,
+    start,
+    retry,
+    goToPreviousStep,
+    resetOnboarding,
+  } = useOnboardingStore();
 
-  const totalSteps = mockOnboardingSteps.length;
-  const currentStep = mockOnboardingSteps[currentStepIndex];
-  const progress = isComplete ? 1 : currentStepIndex / totalSteps;
+  // The first question comes from the agent, so ask for it on mount.
+  useEffect(() => {
+    if (status === 'idle' && !isComplete && !currentQuestion) void start();
+  }, [status, isComplete, currentQuestion, start]);
+
+  const totalSteps = totalQuestions || 0;
+  const currentStep =
+    currentQuestion && !isComplete
+      ? questionToStep(currentQuestion, questionNumber, totalSteps)
+      : null;
+  const progress = isComplete
+    ? 1
+    : totalSteps > 0
+      ? (questionNumber - 1) / totalSteps
+      : 0;
+  const isLoading = status === 'loading';
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -27,10 +51,11 @@ export const OnboardingShell: React.FC = () => {
       <header className="sticky top-0 z-40 bg-page">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-4 px-4 py-4">
           <div className="w-11">
-            {currentStepIndex > 0 && !isComplete && (
+            {history.length > 0 && !isComplete && (
               <button
                 type="button"
-                onClick={goToPreviousStep}
+                onClick={() => void goToPreviousStep()}
+                disabled={isLoading}
                 aria-label="Back to previous question"
                 className="-ml-2.5 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted transition-colors duration-200 ease-soft hover:bg-tile hover:text-ink"
               >
@@ -91,29 +116,65 @@ export const OnboardingShell: React.FC = () => {
             >
               <OnboardingCompleted />
             </motion.section>
+          ) : status === 'error' ? (
+            <motion.section
+              key="error"
+              aria-label="Something went wrong"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="pt-8 text-center"
+            >
+              <p className="text-ink">We could not reach the quiz service.</p>
+              <p className="caption mt-2 break-words text-faint">{error}</p>
+              <button
+                type="button"
+                onClick={() => void retry()}
+                className="mt-6 inline-flex min-h-14 cursor-pointer items-center justify-center rounded-pill bg-ink px-8 text-[1.0625rem] font-medium text-page transition-colors duration-200 ease-soft hover:bg-accent-strong"
+              >
+                Try again
+              </button>
+            </motion.section>
+          ) : !currentStep ? (
+            <motion.section
+              key="loading"
+              aria-label="Loading the next question"
+              aria-busy="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="pt-8"
+            >
+              <div className="h-4 w-2/3 animate-pulse rounded-pill bg-tile" />
+              <div className="mt-10 flex flex-col gap-2.5">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-16 animate-pulse rounded-tile bg-tile" />
+                ))}
+              </div>
+            </motion.section>
           ) : (
-            currentStep && (
+            (
               <motion.section
                 key={currentStep.id}
-                aria-label={`Question ${currentStepIndex + 1} of ${totalSteps}`}
+                aria-label={`Question ${questionNumber} of ${totalSteps}`}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <QuestionHeader
-                  fieldNumber={currentStepIndex + 1}
+                  fieldNumber={questionNumber}
                   totalFields={totalSteps}
-                  pigment={pigmentForIndex(currentStepIndex)}
+                  pigment={pigmentForIndex(questionNumber - 1)}
                   category={currentStep.category}
                   question={currentStep.question}
                   helperText={currentStep.helperText}
                 />
 
                 {currentStep.mode === 'single_select' ? (
-                  <SingleSelectStep step={currentStep} totalSteps={totalSteps} />
+                  <SingleSelectStep step={currentStep} />
                 ) : (
-                  <MultiSelectStep step={currentStep} totalSteps={totalSteps} />
+                  <MultiSelectStep step={currentStep} />
                 )}
               </motion.section>
             )

@@ -1,178 +1,163 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type {
-  OnboardingSubmissionPayload,
-  StepAnswerRecord,
-} from '../types/onboarding';
+import { fetchNextQuestion } from '../api/quizApi';
+import type { AnsweredQuestionDto, QuestionDto } from '../types/quiz';
+
+export type QuizStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 interface OnboardingStoreState {
-  currentStepIndex: number;
-  answers: Record<string, string[]>; // Committed answers: stepId -> optionIds
-  draftAnswers: Record<string, string[]>; // Draft selections for active multi-select
-  history: StepAnswerRecord[];
-  lastSubmissionPayload: OnboardingSubmissionPayload | null;
+  /** The wire contract, and the only source of truth. Sent verbatim on every call. */
+  history: AnsweredQuestionDto[];
+  currentQuestion: QuestionDto | null;
+  questionNumber: number;
+  totalQuestions: number;
+
+  /** Question text -> selected option labels. Derived from history, for the UI. */
+  answers: Record<string, string[]>;
+  /** In-progress multi-select picks, before Continue commits them. */
+  draftAnswers: Record<string, string[]>;
+
+  /** Exactly what was last POSTed, for the payload inspector. */
+  lastRequest: AnsweredQuestionDto[] | null;
+  status: QuizStatus;
+  error: string | null;
   isComplete: boolean;
 
-  // Actions
-  toggleDraftOption: (stepId: string, optionId: string) => void;
-  selectSingleOption: (
-    stepId: string,
-    optionId: string,
-    totalSteps: number
-  ) => OnboardingSubmissionPayload;
-  submitMultiStep: (
-    stepId: string,
-    totalSteps: number
-  ) => OnboardingSubmissionPayload;
-  goToPreviousStep: () => void;
+  start: () => Promise<void>;
+  retry: () => Promise<void>;
+  toggleDraftOption: (question: string, label: string) => void;
+  selectSingleOption: (question: string, label: string) => Promise<void>;
+  submitMultiStep: (question: string) => Promise<void>;
+  goToPreviousStep: () => Promise<void>;
   resetOnboarding: () => void;
 }
 
+const answersFromHistory = (history: AnsweredQuestionDto[]) =>
+  Object.fromEntries(history.map((h) => [h.question, h.selectedAnswers]));
+
 export const useOnboardingStore = create<OnboardingStoreState>()(
   persist(
-    (set, get) => ({
-      currentStepIndex: 0,
-      answers: {},
-      draftAnswers: {},
-      history: [],
-      lastSubmissionPayload: null,
-      isComplete: false,
-
-      toggleDraftOption: (stepId: string, optionId: string) => {
-        const currentDraft = get().draftAnswers[stepId] ?? get().answers[stepId] ?? [];
-        const exists = currentDraft.includes(optionId);
-        const updated = exists
-          ? currentDraft.filter((id) => id !== optionId)
-          : [...currentDraft, optionId];
-
-        set((state) => ({
-          draftAnswers: {
-            ...state.draftAnswers,
-            [stepId]: updated,
-          },
-        }));
-      },
-
-      selectSingleOption: (stepId: string, optionId: string, totalSteps: number) => {
-        const state = get();
-        const selected = [optionId];
-        const newAnswers = {
-          ...state.answers,
-          [stepId]: selected,
-        };
-
-        const newRecord: StepAnswerRecord = {
-          stepId,
-          selectedOptionIds: selected,
-          answeredAt: new Date().toISOString(),
-        };
-
-        const filteredHistory = state.history.filter((h) => h.stepId !== stepId);
-        const updatedHistory = [...filteredHistory, newRecord];
-
-        const payload: OnboardingSubmissionPayload = {
-          currentStepId: stepId,
-          currentAnswer: selected,
-          allAnswers: newAnswers,
-          history: updatedHistory,
-        };
-
-        const nextIndex = state.currentStepIndex + 1;
-        const complete = nextIndex >= totalSteps;
-
+    (set, get) => {
+      /** Ask the backend for the next question given a history, and store the result. */
+      const advance = async (history: AnsweredQuestionDto[]) => {
         set({
-          answers: newAnswers,
-          draftAnswers: {
-            ...state.draftAnswers,
-            [stepId]: selected,
-          },
-          history: updatedHistory,
-          lastSubmissionPayload: payload,
-          currentStepIndex: complete ? state.currentStepIndex : nextIndex,
-          isComplete: complete,
+          history,
+          answers: answersFromHistory(history),
+          lastRequest: history,
+          status: 'loading',
+          error: null,
         });
-
-        console.group(`[Quizly Onboarding] Step Submitted: ${stepId}`);
-        console.log('Current Answer:', selected);
-        console.log('All Cumulative Answers:', newAnswers);
-        console.log('Full Submission Payload:', payload);
-        console.groupEnd();
-
-        return payload;
-      },
-
-      submitMultiStep: (stepId: string, totalSteps: number) => {
-        const state = get();
-        const selected =
-          state.draftAnswers[stepId] ?? state.answers[stepId] ?? [];
-
-        if (selected.length === 0) {
-          throw new Error('At least one option must be selected.');
+        try {
+          const res = await fetchNextQuestion(history);
+          set({
+            currentQuestion: res.nextQuestion,
+            questionNumber: res.questionNumber,
+            totalQuestions: res.totalQuestions,
+            isComplete: res.nextQuestion === null,
+            status: 'ready',
+          });
+        } catch (err) {
+          set({
+            status: 'error',
+            error: err instanceof Error ? err.message : 'Request failed',
+          });
         }
+      };
 
-        const newAnswers = {
-          ...state.answers,
-          [stepId]: selected,
-        };
+      /** Append the answer to the question on screen, then ask for the next one. */
+      const commit = async (question: string, selectedAnswers: string[]) => {
+        const current = get().currentQuestion;
+        if (!current || current.question !== question) return;
+        if (selectedAnswers.length === 0) return;
+        await advance([...get().history, { ...current, selectedAnswers }]);
+      };
 
-        const newRecord: StepAnswerRecord = {
-          stepId,
-          selectedOptionIds: selected,
-          answeredAt: new Date().toISOString(),
-        };
+      return {
+        history: [],
+        currentQuestion: null,
+        questionNumber: 0,
+        totalQuestions: 0,
+        answers: {},
+        draftAnswers: {},
+        lastRequest: null,
+        status: 'idle',
+        error: null,
+        isComplete: false,
 
-        const filteredHistory = state.history.filter((h) => h.stepId !== stepId);
-        const updatedHistory = [...filteredHistory, newRecord];
+        start: async () => {
+          if (get().status === 'loading') return;
+          await advance(get().history);
+        },
 
-        const payload: OnboardingSubmissionPayload = {
-          currentStepId: stepId,
-          currentAnswer: selected,
-          allAnswers: newAnswers,
-          history: updatedHistory,
-        };
+        retry: async () => {
+          await advance(get().history);
+        },
 
-        const nextIndex = state.currentStepIndex + 1;
-        const complete = nextIndex >= totalSteps;
+        toggleDraftOption: (question, label) => {
+          const state = get();
+          const draft = state.draftAnswers[question] ?? state.answers[question] ?? [];
+          set({
+            draftAnswers: {
+              ...state.draftAnswers,
+              [question]: draft.includes(label)
+                ? draft.filter((l) => l !== label)
+                : [...draft, label],
+            },
+          });
+        },
 
-        set({
-          answers: newAnswers,
-          history: updatedHistory,
-          lastSubmissionPayload: payload,
-          currentStepIndex: complete ? state.currentStepIndex : nextIndex,
-          isComplete: complete,
-        });
+        selectSingleOption: async (question, label) => {
+          set((state) => ({
+            draftAnswers: { ...state.draftAnswers, [question]: [label] },
+          }));
+          await commit(question, [label]);
+        },
 
-        console.group(`[Quizly Onboarding] Step Submitted: ${stepId}`);
-        console.log('Current Answer:', selected);
-        console.log('All Cumulative Answers:', newAnswers);
-        console.log('Full Submission Payload:', payload);
-        console.groupEnd();
+        submitMultiStep: async (question) => {
+          const state = get();
+          const selected = state.draftAnswers[question] ?? state.answers[question] ?? [];
+          await commit(question, selected);
+        },
 
-        return payload;
-      },
+        /** Drop the last answer and ask again. The agent is stateless, so the
+         *  question it offers next may differ from the one just undone. */
+        goToPreviousStep: async () => {
+          const history = get().history;
+          if (history.length === 0) return;
+          await advance(history.slice(0, -1));
+        },
 
-      goToPreviousStep: () => {
-        set((state) => ({
-          currentStepIndex: Math.max(0, state.currentStepIndex - 1),
-          isComplete: false,
-        }));
-      },
-
-      resetOnboarding: () => {
-        set({
-          currentStepIndex: 0,
-          answers: {},
-          draftAnswers: {},
-          history: [],
-          lastSubmissionPayload: null,
-          isComplete: false,
-        });
-        localStorage.removeItem('quizly-onboarding-storage');
-      },
-    }),
+        resetOnboarding: () => {
+          set({
+            history: [],
+            currentQuestion: null,
+            questionNumber: 0,
+            totalQuestions: 0,
+            answers: {},
+            draftAnswers: {},
+            lastRequest: null,
+            status: 'idle',
+            error: null,
+            isComplete: false,
+          });
+          localStorage.removeItem('quizly-onboarding-storage');
+          void get().start();
+        },
+      };
+    },
     {
       name: 'quizly-onboarding-storage',
       storage: createJSONStorage(() => localStorage),
+      // Never persist transient request state: a reload must not restore 'loading'.
+      partialize: (state) => ({
+        history: state.history,
+        currentQuestion: state.currentQuestion,
+        questionNumber: state.questionNumber,
+        totalQuestions: state.totalQuestions,
+        answers: state.answers,
+        draftAnswers: state.draftAnswers,
+        isComplete: state.isComplete,
+      }),
     }
   )
 );

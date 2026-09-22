@@ -5,15 +5,11 @@ import { OptionTile } from './OptionTile';
 
 interface MultiSelectStepProps {
   step: OnboardingStepUI;
-  totalSteps: number;
 }
 
 const EMPTY_SELECTIONS: string[] = [];
 
-export const MultiSelectStep: React.FC<MultiSelectStepProps> = ({
-  step,
-  totalSteps,
-}) => {
+export const MultiSelectStep: React.FC<MultiSelectStepProps> = ({ step }) => {
   const toggleDraftOption = useOnboardingStore((s) => s.toggleDraftOption);
   const submitMultiStep = useOnboardingStore((s) => s.submitMultiStep);
   const selectedIds = useOnboardingStore(
@@ -24,7 +20,7 @@ export const MultiSelectStep: React.FC<MultiSelectStepProps> = ({
 
   const handleContinue = () => {
     if (!hasSelection) return;
-    submitMultiStep(step.id, totalSteps);
+    void submitMultiStep(step.id);
   };
 
   return (

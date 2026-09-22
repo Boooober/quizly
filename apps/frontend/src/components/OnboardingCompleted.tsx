@@ -1,11 +1,9 @@
 import React from 'react';
 import { useOnboardingStore } from '../store/useOnboardingStore';
-import { mockOnboardingSteps } from '../data/mockSteps';
 import { pigmentForIndex } from '../theme/pigments';
 
 export const OnboardingCompleted: React.FC = () => {
-  const { answers, history, lastSubmissionPayload, resetOnboarding } =
-    useOnboardingStore();
+  const { history, resetOnboarding } = useOnboardingStore();
 
   return (
     <div className="pb-24">
@@ -20,22 +18,19 @@ export const OnboardingCompleted: React.FC = () => {
       </div>
 
       <dl className="mt-10 flex flex-col gap-2.5">
-        {mockOnboardingSteps.map((step, index) => {
+        {history.map((entry, index) => {
           const pigment = pigmentForIndex(index);
-          const selected = answers[step.id] ?? [];
-          const selectedLabels = step.options
-            .filter((option) => selected.includes(option.id))
-            .map((option) => option.title);
+          const selectedLabels = entry.selectedAnswers;
 
           return (
-            <div key={step.id} className="rounded-tile bg-tile px-5 py-4">
+            <div key={entry.question} className="rounded-tile bg-tile px-5 py-4">
               <dt className="caption flex items-center gap-2 text-faint">
                 <span
                   aria-hidden="true"
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: pigment.hex }}
                 />
-                {step.category ?? `Question ${index + 1}`}
+                {`Question ${index + 1}`}
               </dt>
               <dd className="mt-1.5">
                 {selectedLabels.length > 0 ? (
@@ -58,10 +53,10 @@ export const OnboardingCompleted: React.FC = () => {
       {import.meta.env.DEV && (
         <details className="mt-4">
           <summary className="caption cursor-pointer text-faint hover:text-muted">
-            Cumulative payload (dev)
+            Full history, as sent to the backend (dev)
           </summary>
           <pre className="mt-2 overflow-x-auto rounded-tile bg-tile p-4 font-mono text-xs leading-relaxed text-muted">
-            {JSON.stringify(lastSubmissionPayload, null, 2)}
+            {JSON.stringify(history, null, 2)}
           </pre>
         </details>
       )}

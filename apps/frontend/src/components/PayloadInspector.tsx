@@ -8,12 +8,12 @@ import { useOnboardingStore } from '../store/useOnboardingStore';
  */
 export const PayloadInspector: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { answers, history, lastSubmissionPayload, currentStepIndex } =
+  const { history, lastRequest, status, questionNumber, totalQuestions } =
     useOnboardingStore();
 
   if (!import.meta.env.DEV) return null;
 
-  const answersCount = Object.keys(answers).length;
+  const answersCount = history.length;
 
   return (
     // Docked top-right: the bottom edge belongs to the primary CTA
@@ -42,16 +42,12 @@ export const PayloadInspector: React.FC = () => {
         {isOpen && (
           <div className="max-h-72 space-y-2 overflow-y-auto border-t border-rule p-3 text-left">
             <p className="caption text-faint">
-              Last submission payload
+              POST /quiz/submit-answer body ({status}, {questionNumber}/
+              {totalQuestions})
             </p>
             <pre className="overflow-x-auto rounded-md bg-tile p-2.5 font-mono text-[0.6875rem] leading-relaxed text-muted">
               {JSON.stringify(
-                lastSubmissionPayload ?? {
-                  status: 'no submission yet',
-                  currentStepIndex,
-                  activeAnswers: answers,
-                  historyLength: history.length,
-                },
+                lastRequest ?? { status: 'no request sent yet' },
                 null,
                 2
               )}

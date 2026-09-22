@@ -5,15 +5,11 @@ import { OptionTile } from './OptionTile';
 
 interface SingleSelectStepProps {
   step: OnboardingStepUI;
-  totalSteps: number;
 }
 
 const EMPTY_SELECTIONS: string[] = [];
 
-export const SingleSelectStep: React.FC<SingleSelectStepProps> = ({
-  step,
-  totalSteps,
-}) => {
+export const SingleSelectStep: React.FC<SingleSelectStepProps> = ({ step }) => {
   const selectSingleOption = useOnboardingStore((s) => s.selectSingleOption);
   const currentSelections = useOnboardingStore(
     (s) => s.answers[step.id] ?? EMPTY_SELECTIONS
@@ -32,7 +28,7 @@ export const SingleSelectStep: React.FC<SingleSelectStepProps> = ({
     setPendingOptionId(optionId);
     // Brief hold so the selected state registers before the step advances
     advanceTimer.current = setTimeout(() => {
-      selectSingleOption(step.id, optionId, totalSteps);
+      void selectSingleOption(step.id, optionId);
       setPendingOptionId(null);
     }, 180);
   };

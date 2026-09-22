@@ -1,4 +1,10 @@
 import { sunglassesCatalog, type SunglassesProduct } from '../data/sunglassesCatalog';
+import { fetchRecommendation } from '../api/quizApi';
+import type { AnsweredQuestionDto } from '../types/quiz';
+
+/** Everything the user picked, lowercased, for keyword matching in the fallback. */
+const selectedText = (history: AnsweredQuestionDto[]) =>
+  history.flatMap((h) => h.selectedAnswers).join(' | ').toLowerCase();
 
 export interface RecommendationResult {
   hero: SunglassesProduct;
@@ -8,106 +14,84 @@ export interface RecommendationResult {
 }
 
 /**
- * Calculates a personalized recommendation from user onboarding answers.
- * Optionally attempts the backend /quiz/recommend endpoint, falling back to local heuristic.
+ * Asks the backend to pick a product from the answer history. Falls back to a
+ * local keyword heuristic when the service is unreachable, so a demo survives
+ * a cold start or an agent hiccup.
  */
 export async function computeRecommendation(
-  answers: Record<string, string[]>
+  history: AnsweredQuestionDto[]
 ): Promise<RecommendationResult> {
-  // Try backend first if configured or local
-  const apiUrl = (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env?.VITE_API_URL || 'http://localhost:3000';
   try {
-    const formattedAnswers = Object.entries(answers).map(([stepId, selectedOptionIds]) => ({
-      question: stepId,
-      answers: selectedOptionIds,
-      typeOfQuestion: 'multiChoice' as const,
-      selectedAnswers: selectedOptionIds,
-    }));
+    const data = await fetchRecommendation(history);
+    const hero =
+      sunglassesCatalog.find((p) => p.id === data.hero?.id) ?? sunglassesCatalog[0];
+    const alternatives = (data.alternatives ?? [])
+      .map((a) => sunglassesCatalog.find((p) => p.id === a.id))
+      .filter((p): p is SunglassesProduct => !!p && p.id !== hero.id);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-    const res = await fetch(`${apiUrl}/quiz/recommend`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formattedAnswers),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      const heroProduct = sunglassesCatalog.find((p) => p.id === data.hero?.id) || sunglassesCatalog[0];
-      const altProducts = (data.alternatives || [])
-        .map((a: { id: string }) => sunglassesCatalog.find((p) => p.id === a.id))
-        .filter((p: SunglassesProduct | undefined): p is SunglassesProduct => !!p && p.id !== heroProduct.id);
-
-      return {
-        hero: heroProduct,
-        alternatives: altProducts.length > 0 ? altProducts : getFallbackAlternatives(heroProduct.id),
-        why: data.why && data.why.length > 0 ? data.why : generateWhyBullets(heroProduct, answers),
-        source: 'backend',
-      };
-    }
+    return {
+      hero,
+      alternatives: alternatives.length > 0 ? alternatives : getFallbackAlternatives(hero.id),
+      why: data.why?.length ? data.why : generateWhyBullets(hero, history),
+      source: 'backend',
+    };
   } catch {
-    // Backend offline or cold - proceed to client heuristic
+    return computeClientRecommendation(history);
   }
-
-  // Client-side heuristic recommendation engine
-  return computeClientRecommendation(answers);
 }
 
-function computeClientRecommendation(answers: Record<string, string[]>): RecommendationResult {
-  const selectedOptions = new Set(Object.values(answers).flat());
+function computeClientRecommendation(history: AnsweredQuestionDto[]): RecommendationResult {
+  const picked = selectedText(history);
+  const said = (...needles: string[]) => needles.some((n) => picked.includes(n));
 
   const scored = sunglassesCatalog.map((product) => {
     let score = 50; // base score
 
     // Width fit scoring
-    if (selectedOptions.has('width_tight')) {
+    if (said('pinch my temples', 'too tight')) {
       if (product.frame_size === 'Wide' || product.frame_width_mm >= 144) score += 25;
       else if (product.frame_size === 'Narrow' || product.frame_width_mm <= 135) score -= 30;
-    } else if (selectedOptions.has('width_loose')) {
+    } else if (said('too wide', 'slide or look oversized')) {
       if (product.frame_size === 'Narrow' || product.frame_size === 'Narrow to Standard' || product.frame_width_mm <= 136) score += 25;
       else if (product.frame_size === 'Wide') score -= 30;
     }
 
     // Pain points scoring
-    if (selectedOptions.has('pain_bridge_slip')) {
+    if (said('slide down my nose')) {
       if (product.bridge_architecture.toLowerCase().includes('silicone') || product.bridge_architecture.toLowerCase().includes('rubber')) score += 20;
     }
-    if (selectedOptions.has('pain_pinch_marks') || selectedOptions.has('pain_temple_fatigue')) {
+    if (said('red pinch marks', 'behind my ears', 'featherlight')) {
       if (product.weight_grams < 15.0) score += 25;
       else if (product.weight_grams > 30.0) score -= 15;
     }
-    if (selectedOptions.has('pain_cheek_contact')) {
+    if (said('touch your cheeks', 'lift off my nose')) {
       if (product.solves_pain_points.some((p) => p.toLowerCase().includes('cheek'))) score += 20;
     }
 
     // Bridge ergonomics
-    if (selectedOptions.has('bridge_silicone_pads') && product.bridge_architecture.toLowerCase().includes('silicone')) {
+    if (said('slide down my nose') && product.bridge_architecture.toLowerCase().includes('silicone')) {
       score += 20;
     }
-    if (selectedOptions.has('bridge_ultralight_rimless') && (product.weight_grams < 15 || product.frame_material.toLowerCase().includes('titanium'))) {
+    if (said('featherlight') && (product.weight_grams < 15 || product.frame_material.toLowerCase().includes('titanium'))) {
       score += 20;
     }
 
     // Environment & activities
-    if (selectedOptions.has('env_driving_road') || selectedOptions.has('env_water_snow')) {
+    if (said('driving and road trips', 'water, beach, boating, snow')) {
       if (product.lens_type.toLowerCase().includes('polarized')) score += 25;
     }
-    if (selectedOptions.has('env_active_training')) {
+    if (said('running, cycling, training')) {
       if (product.best_for_activities.some((a) => a.toLowerCase().includes('running') || a.toLowerCase().includes('cycling'))) score += 30;
     }
 
     // Lens privacy & aesthetic
-    if (selectedOptions.has('tint_impenetrable_dark')) {
+    if (said('fully dark')) {
       if (product.lens_tint.toLowerCase().includes('black') || product.lens_tint.toLowerCase().includes('obsidian') || product.lens_tint.toLowerCase().includes('mirror')) score += 15;
     }
-    if (selectedOptions.has('tint_gradient_luminous')) {
+    if (said('lighter gradient')) {
       if (product.lens_type.toLowerCase().includes('gradient') || product.lens_tint.toLowerCase().includes('gradient')) score += 20;
     }
-    if (selectedOptions.has('tint_expressive_vintage')) {
+    if (said('tinted and expressive')) {
       if (product.lens_tint.toLowerCase().includes('amber') || product.lens_tint.toLowerCase().includes('green')) score += 15;
     }
 
@@ -118,7 +102,7 @@ function computeClientRecommendation(answers: Record<string, string[]>): Recomme
 
   const hero = scored[0].product;
   const alternatives = scored.slice(1, 4).map((s) => s.product);
-  const why = generateWhyBullets(hero, answers);
+  const why = generateWhyBullets(hero, history);
 
   return {
     hero,
@@ -128,27 +112,28 @@ function computeClientRecommendation(answers: Record<string, string[]>): Recomme
   };
 }
 
-function generateWhyBullets(product: SunglassesProduct, answers: Record<string, string[]>): string[] {
-  const selectedOptions = new Set(Object.values(answers).flat());
+function generateWhyBullets(product: SunglassesProduct, history: AnsweredQuestionDto[]): string[] {
+  const picked = selectedText(history);
+  const said = (...needles: string[]) => needles.some((n) => picked.includes(n));
   const bullets: string[] = [];
 
-  if (selectedOptions.has('width_tight')) {
+  if (said('pinch my temples', 'too tight')) {
     bullets.push(`Generous ${product.frame_width_mm}mm frame width eliminates temple pinch and pressure indentations.`);
-  } else if (selectedOptions.has('width_loose')) {
+  } else if (said('too wide', 'slide or look oversized')) {
     bullets.push(`Calibrated ${product.frame_width_mm}mm profile ensures a flush, secure fit without sliding forward.`);
   } else {
     bullets.push(`Tailored ${product.frame_size.toLowerCase()} chassis engineered for balanced, all-day zygomatic comfort.`);
   }
 
-  if (selectedOptions.has('pain_bridge_slip') || selectedOptions.has('bridge_silicone_pads')) {
+  if (said('slide down my nose') || said('slide down my nose')) {
     bullets.push(`Features ${product.bridge_architecture.toLowerCase()} that anchor firmly even in high heat.`);
-  } else if (selectedOptions.has('pain_pinch_marks') || product.weight_grams < 20) {
+  } else if (said('red pinch marks') || product.weight_grams < 20) {
     bullets.push(`Featherweight ${product.weight_grams}g build prevents nasal crest fatigue and red pressure marks.`);
   } else {
     bullets.push(`${product.frame_material} delivers enduring structural resilience.`);
   }
 
-  if (selectedOptions.has('env_water_snow') || selectedOptions.has('env_driving_road')) {
+  if (said('water, beach, boating, snow', 'driving and road trips')) {
     bullets.push(`${product.lens_type} eradicates blinding reflective surface glare on highways and water.`);
   } else {
     bullets.push(`${product.lens_tint} provides optimal optical clarity and UV400 sun protection.`);
