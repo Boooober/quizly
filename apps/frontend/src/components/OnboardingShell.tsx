@@ -79,7 +79,11 @@ export const OnboardingShell: React.FC = () => {
       </header>
 
       {/* Viewport Content */}
-      <main className="flex-1 mx-auto max-w-xl w-full px-4 sm:px-6 pt-6 sm:pt-10">
+      <main
+        className={`flex-1 mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-10 transition-all duration-300 ${
+          isComplete ? 'max-w-3xl' : 'max-w-xl'
+        }`}
+      >
         <AnimatePresence mode="wait">
           {isComplete ? (
             <motion.div
