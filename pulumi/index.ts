@@ -77,11 +77,16 @@ const service = new gcp.cloudrunv2.Service("backend", {
     },
 });
 
-// --- Images: sunglasses photos (PNG). Private; grant access when a reader/writer is known.
+// --- Images: sunglasses photos (PNG). Publicly readable.
 const images = new gcp.storage.Bucket("images", {
     name: `${project}-quizly-images`,
     location: region,
     uniformBucketLevelAccess: true,
+});
+new gcp.storage.BucketIAMMember("images-public-read", {
+    bucket: images.name,
+    role: "roles/storage.objectViewer",
+    member: "allUsers",
 });
 
 export const imagesBucket = images.name;
