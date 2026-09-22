@@ -6,7 +6,7 @@ import type {
 
 const API_URL =
   (import.meta as unknown as { env?: { VITE_API_URL?: string } }).env
-    ?.VITE_API_URL || 'http://localhost:3000';
+    ?.VITE_API_URL || 'https://quizly-backend-jlfxz2zysa-ew.a.run.app';
 
 /** Generous: a Cloud Run cold start plus an agent turn can take tens of seconds. */
 const TIMEOUT_MS = 45_000;
