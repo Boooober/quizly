@@ -2,3 +2,5 @@ encryptionsalt: v1:+ifqNKa4t3M=:v1:7uDAG5V+Ynae2W95:GILJTU7QAliSzizTt9Yqe7M//hGW
 config:
   gcp:project: team3-507508
   gcp:region: europe-west1
+  gcp:userProjectOverride: "true"
+  gcp:billingProject: team3-507508

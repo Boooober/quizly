@@ -1,4 +1,7 @@
+import { execSync } from "child_process";
+import * as crypto from "crypto";
 import * as fs from "fs";
+import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
 import * as docker from "@pulumi/docker-build";
@@ -6,41 +9,97 @@ import * as docker from "@pulumi/docker-build";
 const gcpCfg = new pulumi.Config("gcp");
 const project = gcpCfg.require("project");
 const region = gcpCfg.require("region");
+const projectNumber = gcp.organizations.getProjectOutput({ projectId: project }).number;
 
-// --- Agent: pure ADK config in Agent Engine, no agent code. Edit agent/prompt.md and `pulumi up`.
-const agent = new gcp.vertex.AiReasoningEngine("quizly-agent", {
-    displayName: "quizly-agent",
-    description: "Generates quizzes from a topic or source text",
-    region,
-    spec: {
-        agentFramework: "google-adk",
-        sourceCodeSpec: {
-            agentConfigSource: {
-                adkConfig: {
-                    jsonConfig: JSON.stringify({
-                        agent_class: "LlmAgent",
-                        name: "quizly",
-                        model: "gemini-3.5-flash",
-                        description: "Quiz generator",
-                        instruction: fs.readFileSync("agent/prompt.md", "utf8"),
-                        // thinking off: cuts ~10s per call; JSON mime keeps replies fence-free
-                        generate_content_config: {
-                            thinkingConfig: { thinkingBudget: 0 },
-                            responseMimeType: "application/json",
-                        },
-                    }),
+// --- Catalog data store: Vertex AI Search over sunglasses.jsonl, queried by the agent.
+const catalogFile = "../sunglasses.jsonl";
+const dataBucket = new gcp.storage.Bucket("data", {
+    name: `${project}-quizly-data`,
+    location: region,
+    uniformBucketLevelAccess: true,
+});
+// Discovery Engine's "custom" schema keys documents on `_id`, the catalog uses `id`.
+const catalogJsonl = fs
+    .readFileSync(catalogFile, "utf8")
+    .split("\n")
+    .filter((l) => l.trim())
+    .map((l) => {
+        const item = JSON.parse(l) as { id: string };
+        return JSON.stringify({ _id: item.id, ...item });
+    })
+    .join("\n");
+const catalogObject = new gcp.storage.BucketObject("catalog", {
+    bucket: dataBucket.name,
+    name: "sunglasses.jsonl",
+    content: catalogJsonl,
+});
+const catalogStore = new gcp.discoveryengine.DataStore("catalog", {
+    dataStoreId: "quizly-catalog",
+    location: "global",
+    displayName: "Quizly sunglasses catalog",
+    industryVertical: "GENERIC",
+    contentConfig: "NO_CONTENT",
+    solutionTypes: ["SOLUTION_TYPE_SEARCH"],
+});
+// documents:import has no Pulumi resource, so shell out and re-run when the catalog changes.
+const catalogImport = new command.local.Command(
+    "catalog-import",
+    {
+        create: pulumi.interpolate`bash import-catalog.sh ${project} ${catalogStore.dataStoreId} gs://${dataBucket.name}/${catalogObject.name}`,
+        triggers: [sha256(catalogJsonl), catalogStore.dataStoreId],
+    },
+    { dependsOn: [catalogObject] },
+);
+// The agent runs as the Reasoning Engine service agent; let it read the store.
+new gcp.projects.IAMMember("agent-discoveryengine-viewer", {
+    project,
+    role: "roles/discoveryengine.viewer",
+    member: pulumi.interpolate`serviceAccount:service-${projectNumber}@gcp-sa-aiplatform-re.iam.gserviceaccount.com`,
+});
+
+// --- Agent: ADK config plus agent/src (the catalog search tool). Edit agent/prompt.md and `pulumi up`.
+const agent = new gcp.vertex.AiReasoningEngine(
+    "quizly-agent",
+    {
+        displayName: "quizly-agent",
+        description: "Adaptive sunglasses consultation agent",
+        region,
+        spec: {
+            agentFramework: "google-adk",
+            sourceCodeSpec: {
+                agentConfigSource: {
+                    adkConfig: {
+                        jsonConfig: JSON.stringify({
+                            agent_class: "LlmAgent",
+                            name: "quizly",
+                            model: "gemini-3.5-flash",
+                            description: "Sunglasses consultation agent",
+                            instruction: fs.readFileSync("agent/prompt.md", "utf8"),
+                            tools: [{ name: "tools.catalog_search" }],
+                            // thinking off: cuts ~10s per call; JSON mime keeps replies fence-free
+                            generate_content_config: {
+                                thinkingConfig: { thinkingBudget: 0 },
+                                responseMimeType: "application/json",
+                            },
+                        }),
+                    },
+                    inlineSource: { sourceArchive: tarGz("agent/src") },
                 },
+                pythonSpec: { version: "3.13" },
             },
-            pythonSpec: { version: "3.13" },
-        },
-        deploymentSpec: {
-            minInstances: 3,
-            maxInstances: 10, // warm for demo: ~$10/day per instance (4 CPU, 4 GiB)
-            // gemini-3.x is served only on the global endpoint, not europe-west1
-            envs: [{ name: "GOOGLE_CLOUD_LOCATION", value: "global" }],
+            deploymentSpec: {
+                minInstances: 3,
+                maxInstances: 10, // warm for demo: ~$10/day per instance (4 CPU, 4 GiB)
+                envs: [
+                    // gemini-3.x is served only on the global endpoint, not europe-west1
+                    { name: "GOOGLE_CLOUD_LOCATION", value: "global" },
+                    { name: "CATALOG_DATA_STORE", value: catalogStore.name },
+                ],
+            },
         },
     },
-});
+    { dependsOn: [catalogImport] },
+);
 const engineName = pulumi.interpolate`projects/${project}/locations/${region}/reasoningEngines/${agent.name}`;
 
 // --- Backend image: built locally with Docker, pushed to Artifact Registry.
@@ -115,3 +174,14 @@ export const imagesBucket = images.name;
 export const backendUrl = service.uri;
 export const frontendUrl = frontend.uri;
 export const agentEngine = engineName;
+
+function sha256(data: string): string {
+    return crypto.createHash("sha256").update(data).digest("hex");
+}
+
+/** base64 tarball of a directory. gzip -n drops the timestamp so the hash is stable. */
+function tarGz(dir: string): string {
+    const out = `${process.env.TMPDIR ?? "/tmp"}/quizly-${dir.replace(/\//g, "-")}.tar.gz`;
+    execSync(`tar -cf - -C ${dir} . | gzip -n > ${out}`, { shell: "/bin/bash" });
+    return fs.readFileSync(out).toString("base64");
+}
