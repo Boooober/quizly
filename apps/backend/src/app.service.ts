@@ -28,7 +28,16 @@ const CATALOG: CatalogItem[] = readFileSync(
   .split('\n')
   .filter(Boolean)
   .map((l) => JSON.parse(l) as CatalogItem);
-const PROMPT_FIELDS = [
+/** The base prompt fixes its own output shape, so every request opens by overriding it. */
+const override = (shape: string, ...rest: string[]) =>
+  [
+    'TASK OVERRIDE. For this request only, ignore any output format described in your system instructions.',
+    'Return exactly this JSON object and nothing else:',
+    shape,
+    ...rest,
+  ].join('\n');
+
+const CANDIDATE_FIELDS = [
   'id',
   'title',
   'price',
@@ -40,21 +49,13 @@ const PROMPT_FIELDS = [
   'solves_pain_points',
   'pitch_bullet_points',
 ];
-const CATALOG_FOR_PROMPT = JSON.stringify(
-  CATALOG.map((i) => Object.fromEntries(PROMPT_FIELDS.map((k) => [k, i[k]]))),
-);
-/** The base prompt fixes its own output shape, so every request opens by overriding it. */
-const override = (shape: string, ...rest: string[]) =>
-  [
-    'TASK OVERRIDE. For this request only, ignore any output format described in your system instructions.',
-    'Return exactly this JSON object and nothing else:',
-    shape,
-    ...rest,
-  ].join('\n');
+const slim = (item: CatalogItem, fields: string[]) =>
+  Object.fromEntries(fields.map((k) => [k, item[k]])) as CatalogItem;
 
 @Injectable()
 export class AppService {
   private readonly engine = process.env.AGENT_ENGINE ?? '';
+  private readonly dataStore = process.env.CATALOG_DATA_STORE ?? '';
   private readonly auth = new GoogleAuth({
     scopes: 'https://www.googleapis.com/auth/cloud-platform',
   });
@@ -66,6 +67,7 @@ export class AppService {
     const message = override(
       `{"nextQuestion": {"question": string, "answers": string[], "typeOfQuestion": ${QUESTION_TYPES.map((t) => `"${t}"`).join(' | ')}}}`,
       'Return {"nextQuestion": null} if you have enough information.',
+      'Do not call any tool for this request. Answer from the history alone.',
       '',
       'Your task: pick the single most useful next question for this user. Never repeat a question already asked.',
       'Return null once you have the signal you need; nothing else ends the survey.',
@@ -85,19 +87,22 @@ export class AppService {
   async recommend(
     answers: AnsweredQuestionDto[],
   ): Promise<RecommendationResponseDto> {
+    const candidates = await this.searchCatalog(answers);
+    if (!candidates.length)
+      throw new BadGatewayException('catalog search returned nothing');
     const message = override(
       '{"heroId": string, "alternativeIds": [string, string], "why": [string, string, string]}',
       '"why" are short, persuasive reasons for the hero pick, each tied to a specific answer the user gave.',
       '',
-      'Your task: pick the best sunglasses for this user. Use only ids from the catalog below.',
+      'Your task: pick the best pair for this user from the candidates below. Use only their ids.',
       'Questions asked and the answers the user selected, as JSON:',
       JSON.stringify(answers),
       '',
-      'Sunglasses catalog, as JSON:',
-      CATALOG_FOR_PROMPT,
+      'Candidates, already narrowed by catalog search, best match first:',
+      JSON.stringify(candidates),
     );
     const out = (await this.ask(message)) as AgentPick;
-    const rec = buildRecommendation(out);
+    const rec = buildRecommendation(out, candidates[0].id);
     if (!rec)
       throw new BadGatewayException({
         message: 'agent did not pick a catalog product',
@@ -106,13 +111,47 @@ export class AppService {
     return rec;
   }
 
-  /** Sends one message to the Agent Engine agent and returns its reply parsed as JSON. */
-  private async ask(message: string): Promise<unknown> {
-    const region = this.engine.split('/')[3];
+  /**
+   * Narrows the catalog with Vertex AI Search. The query is the user's own words, which
+   * is what the semantic index is good at; the model then picks one candidate.
+   */
+  private async searchCatalog(
+    answers: AnsweredQuestionDto[],
+  ): Promise<CatalogItem[]> {
+    const query = answers
+      .flatMap((a) => a.selectedAnswers)
+      .join('. ')
+      .slice(0, 1000);
     const client = await this.auth.getClient();
     const { token } = await client.getAccessToken();
     const res = await fetch(
-      `https://${region}-aiplatform.googleapis.com/v1beta1/${this.engine}:streamQuery?alt=sse`,
+      `https://discoveryengine.googleapis.com/v1/${this.dataStore}/servingConfigs/default_search:search`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, pageSize: 5 }),
+      },
+    );
+    if (!res.ok) throw new BadGatewayException(await res.text());
+    const body = (await res.json()) as {
+      results?: { document?: { id?: string } }[];
+    };
+    return (body.results ?? [])
+      .map((r) => CATALOG.find((c) => c.id === r.document?.id))
+      .filter((c): c is CatalogItem => !!c)
+      .map((c) => slim(c, CANDIDATE_FIELDS));
+  }
+
+  /** Sends one message to an Agent Engine agent and returns its reply parsed as JSON. */
+  private async ask(message: string, engine = this.engine): Promise<unknown> {
+    const region = engine.split('/')[3];
+    const client = await this.auth.getClient();
+    const { token } = await client.getAccessToken();
+    const res = await fetch(
+      `https://${region}-aiplatform.googleapis.com/v1beta1/${engine}:streamQuery?alt=sse`,
       {
         method: 'POST',
         headers: {
@@ -138,7 +177,8 @@ export type AgentPick = {
 
 /** Hydrates the agent's ids from the catalog so prices, titles and image URLs are never invented. */
 export function buildRecommendation(
-  pick: AgentPick | null | undefined,
+  agentPick: AgentPick | null | undefined,
+  fallbackHeroId?: string,
 ): RecommendationResponseDto | null {
   const product = (id?: string): ProductDto | undefined => {
     const i = CATALOG.find((c) => c.id === id);
@@ -152,15 +192,15 @@ export function buildRecommendation(
       }
     );
   };
-  const hero = product(pick?.heroId);
+  const hero = product(agentPick?.heroId) ?? product(fallbackHeroId);
   if (!hero) return null;
-  const alternatives = (pick?.alternativeIds ?? [])
+  const alternatives = (agentPick?.alternativeIds ?? [])
     .map(product)
     .filter((p): p is ProductDto => !!p && p.id !== hero.id);
   return {
     hero,
     alternatives,
-    why: (pick?.why ?? []).filter((w) => typeof w === 'string'),
+    why: (agentPick?.why ?? []).filter((w) => typeof w === 'string'),
   };
 }
 
