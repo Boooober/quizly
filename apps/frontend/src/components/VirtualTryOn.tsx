@@ -22,7 +22,7 @@ interface VirtualTryOnProps {
 type SourceMode = 'demo' | 'upload' | 'camera';
 
 export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) => {
-  const [sourceMode, setSourceMode] = useState<SourceMode>('demo');
+  const [sourceMode, setSourceMode] = useState<SourceMode>('camera');
   const [uploadedImageSrc, setUploadedImageSrc] = useState<string | null>(null);
   const [isMediaPipeReady, setIsMediaPipeReady] = useState<boolean>(false);
   const [isFaceDetected, setIsFaceDetected] = useState<boolean>(false);
@@ -141,7 +141,7 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
 
     if (sourceMode === 'camera') {
       navigator.mediaDevices
-        ?.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } })
+        ?.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } })
         .then((s) => {
           stream = s;
           if (videoRef.current) {
@@ -168,14 +168,20 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
 
   // Detect landmarks on static image
   const detectStaticFace = useCallback(async (imageElement: HTMLImageElement, canvas: HTMLCanvasElement) => {
+    const glassesImg = glassesImageRef.current;
+    const aspectRatio =
+      glassesImg && glassesImg.naturalWidth && glassesImg.naturalHeight
+        ? glassesImg.naturalWidth / glassesImg.naturalHeight
+        : 2.5;
+
     const landmarker = await getFaceLandmarker();
     if (!landmarker) {
-      // Fallback calibrated transform for 1:1 portrait
+      // Fallback calibrated transform
       cachedLandmarkTransformRef.current = {
-        centerX: canvas.width * 0.498,
-        centerY: canvas.height * 0.455,
-        width: canvas.width * 0.48,
-        height: (canvas.width * 0.48) / 2.0,
+        centerX: canvas.width * 0.505,
+        centerY: canvas.height * 0.448,
+        width: canvas.width * 0.47,
+        height: (canvas.width * 0.47) / aspectRatio,
         angleRad: 0,
       };
       setIsFaceDetected(true);
@@ -189,7 +195,7 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
           results.faceLandmarks[0],
           canvas.width,
           canvas.height,
-          2.0
+          aspectRatio
         );
         if (transform) {
           cachedLandmarkTransformRef.current = transform;
@@ -203,10 +209,10 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
 
     // Default fallback if no face landmarks matched
     cachedLandmarkTransformRef.current = {
-      centerX: canvas.width * 0.5,
-      centerY: canvas.height * 0.46,
-      width: canvas.width * 0.48,
-      height: (canvas.width * 0.48) / 2.0,
+      centerX: canvas.width * 0.505,
+      centerY: canvas.height * 0.448,
+      width: canvas.width * 0.47,
+      height: (canvas.width * 0.47) / aspectRatio,
       angleRad: 0,
     };
     setIsFaceDetected(true);
@@ -225,6 +231,20 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
       const canvas = canvasRef.current;
 
       if (video && video.readyState >= 2 && canvas) {
+        // Synchronize canvas resolution directly with camera resolution to eliminate distortion
+        if (video.videoWidth && video.videoHeight) {
+          if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+          }
+        }
+
+        const glassesImg = glassesImageRef.current;
+        const aspectRatio =
+          glassesImg && glassesImg.naturalWidth && glassesImg.naturalHeight
+            ? glassesImg.naturalWidth / glassesImg.naturalHeight
+            : 2.5;
+
         const landmarker = await getFaceLandmarker();
         if (landmarker) {
           try {
@@ -234,18 +254,32 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
                 results.faceLandmarks[0],
                 canvas.width,
                 canvas.height,
-                2.0
+                aspectRatio
               );
               if (transform) {
-                // Invert X for mirrored webcam view
+                // Invert X and tilt angle for mirrored vanity mirror view
                 transform.centerX = canvas.width - transform.centerX;
                 transform.angleRad = -transform.angleRad;
-                cachedLandmarkTransformRef.current = transform;
+
+                // Temporal smoothing (LERP) between frames to eliminate landmark jitter
+                const prev = cachedLandmarkTransformRef.current;
+                if (!prev) {
+                  cachedLandmarkTransformRef.current = transform;
+                } else {
+                  const lerp = 0.35;
+                  cachedLandmarkTransformRef.current = {
+                    centerX: prev.centerX * (1 - lerp) + transform.centerX * lerp,
+                    centerY: prev.centerY * (1 - lerp) + transform.centerY * lerp,
+                    width: prev.width * (1 - lerp) + transform.width * lerp,
+                    height: prev.height * (1 - lerp) + transform.height * lerp,
+                    angleRad: prev.angleRad * (1 - lerp) + transform.angleRad * lerp,
+                  };
+                }
                 setIsFaceDetected(true);
               }
             }
           } catch {
-            // continue loop on drop
+            // continue loop on frame drop
           }
         }
         renderFrame();
@@ -278,6 +312,10 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
       faceImageRef.current = img;
       const canvas = canvasRef.current;
       if (canvas) {
+        if (img.naturalWidth && img.naturalHeight) {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+        }
         await detectStaticFace(img, canvas);
         renderFrame();
       }
@@ -323,6 +361,22 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
           <button
             type="button"
             onClick={() => {
+              setSourceMode('camera');
+              handleResetAdjustments();
+            }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              sourceMode === 'camera'
+                ? 'bg-amber-400 text-black shadow-md font-semibold'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Camera className="h-3.5 w-3.5" />
+            <span>Live Camera</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
               setSourceMode('demo');
               handleResetAdjustments();
             }}
@@ -347,22 +401,6 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
           >
             <Upload className="h-3.5 w-3.5" />
             <span>Upload Selfie</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setSourceMode('camera');
-              handleResetAdjustments();
-            }}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-              sourceMode === 'camera'
-                ? 'bg-amber-400 text-black shadow-md font-semibold'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            <Camera className="h-3.5 w-3.5" />
-            <span>Live Camera</span>
           </button>
 
           <input
@@ -410,8 +448,8 @@ export const VirtualTryOn: React.FC<VirtualTryOnProps> = ({ selectedProduct }) =
         {/* High-DPI Output Canvas */}
         <canvas
           ref={canvasRef}
-          width={800}
-          height={sourceMode === 'demo' ? 800 : 600}
+          width={sourceMode === 'camera' ? 1280 : 800}
+          height={sourceMode === 'camera' ? 720 : (sourceMode === 'demo' ? 800 : 600)}
           className="h-full w-full object-contain"
         />
 
