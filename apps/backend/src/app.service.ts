@@ -67,7 +67,6 @@ export class AppService {
     const message = override(
       `{"nextQuestion": {"question": string, "answers": string[], "typeOfQuestion": ${QUESTION_TYPES.map((t) => `"${t}"`).join(' | ')}}}`,
       'Return {"nextQuestion": null} if you have enough information.',
-      'Do not call any tool for this request. Answer from the history alone.',
       '',
       'Your task: pick the single most useful next question for this user. Never repeat a question already asked.',
       'Return null once you have the signal you need; nothing else ends the survey.',
