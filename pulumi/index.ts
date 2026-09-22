@@ -40,18 +40,20 @@ const repo = new gcp.artifactregistry.Repository("quizly", {
     location: region,
 });
 const registry = `${region}-docker.pkg.dev`;
-const image = new docker.Image("backend", {
-    tags: [pulumi.interpolate`${registry}/${project}/${repo.repositoryId}/backend:latest`],
-    context: { location: "../apps/backend" },
+const registries = [{
+    address: registry,
+    username: "oauth2accesstoken",
+    password: gcp.organizations.getClientConfigOutput().accessToken,
+}];
+const buildImage = (name: string) => new docker.Image(name, {
+    tags: [pulumi.interpolate`${registry}/${project}/${repo.repositoryId}/${name}:latest`],
+    context: { location: `../apps/${name}` },
     platforms: ["linux/amd64"],
     push: true,
     buildOnPreview: false,
-    registries: [{
-        address: registry,
-        username: "oauth2accesstoken",
-        password: gcp.organizations.getClientConfigOutput().accessToken,
-    }],
+    registries,
 });
+const image = buildImage("backend");
 
 // --- Backend runtime: Cloud Run as a service account allowed to query the agent.
 const sa = new gcp.serviceaccount.Account("backend", {
@@ -77,6 +79,15 @@ const service = new gcp.cloudrunv2.Service("backend", {
     },
 });
 
+// --- Frontend: static Vite build served by nginx, public.
+const frontend = new gcp.cloudrunv2.Service("frontend", {
+    name: "quizly-frontend",
+    location: region,
+    deletionProtection: false,
+    invokerIamDisabled: true,
+    template: { containers: [{ image: buildImage("frontend").ref }] },
+});
+
 // --- Images: sunglasses photos (PNG). Publicly readable.
 const images = new gcp.storage.Bucket("images", {
     name: `${project}-quizly-images`,
@@ -91,4 +102,5 @@ new gcp.storage.BucketIAMMember("images-public-read", {
 
 export const imagesBucket = images.name;
 export const backendUrl = service.uri;
+export const frontendUrl = frontend.uri;
 export const agentEngine = engineName;
