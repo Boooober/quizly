@@ -8,6 +8,7 @@ import { QuestionHeader } from './QuestionHeader';
 import { SingleSelectStep } from './SingleSelectStep';
 import { MultiSelectStep } from './MultiSelectStep';
 import { OnboardingCompleted } from './OnboardingCompleted';
+import { QuizLoader } from './QuizLoader';
 
 export const OnboardingShell: React.FC = () => {
   const {
@@ -105,7 +106,7 @@ export const OnboardingShell: React.FC = () => {
                 Try again
               </button>
             </motion.section>
-          ) : !currentStep ? (
+          ) : isLoading || !currentStep ? (
             <motion.section
               key="loading"
               aria-label="Loading the next question"
@@ -113,14 +114,8 @@ export const OnboardingShell: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="pt-8"
             >
-              <div className="h-4 w-2/3 animate-pulse rounded-pill bg-tile" />
-              <div className="mt-10 flex flex-col gap-2.5">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-16 animate-pulse rounded-tile bg-tile" />
-                ))}
-              </div>
+              <QuizLoader isFirstLoad={!currentQuestion} />
             </motion.section>
           ) : (
             (
