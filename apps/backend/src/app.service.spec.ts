@@ -1,4 +1,4 @@
-import { extractQuiz, parseEvents } from './app.service';
+import { extractJson, parseEvents } from './app.service';
 
 const ev = (text: string, partial = false) =>
   JSON.stringify({ content: { role: 'model', parts: [{ text }] }, partial });
@@ -19,15 +19,15 @@ describe('parseEvents', () => {
   });
 });
 
-describe('extractQuiz', () => {
+describe('extractJson', () => {
   it('takes the last non-partial text event and strips json fences', () => {
     const body = [
       ev('{"x":1}', true),
       ev('```json\n{"title":"T","questions":[]}\n```'),
     ].join('\n');
-    expect(extractQuiz(body)).toEqual({ title: 'T', questions: [] });
+    expect(extractJson(body)).toEqual({ title: 'T', questions: [] });
   });
   it('returns raw text when the model did not emit JSON', () => {
-    expect(extractQuiz(ev('not json'))).toEqual({ raw: 'not json' });
+    expect(extractJson(ev('not json'))).toEqual({ raw: 'not json' });
   });
 });
