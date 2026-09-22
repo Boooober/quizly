@@ -9,7 +9,6 @@ import { SingleSelectStep } from './SingleSelectStep';
 import { MultiSelectStep } from './MultiSelectStep';
 import { QuizLoader } from './QuizLoader';
 import { PostQuizFlow } from './PostQuizFlow';
-import { PayloadInspector } from './PayloadInspector';
 
 export const OnboardingShell: React.FC = () => {
   const {

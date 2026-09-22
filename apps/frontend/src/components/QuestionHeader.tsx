@@ -9,8 +9,6 @@ interface QuestionHeaderProps {
 }
 
 export const QuestionHeader: React.FC<QuestionHeaderProps> = ({
-  pigment,
-  category,
   question,
   helperText,
 }) => {
