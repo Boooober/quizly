@@ -5,7 +5,7 @@
 Quizly is an adaptive, conversion-focused eyewear consultation platform designed to maximize sunglasses sales. Instead of a static questionnaire, Quizly uses a turn-by-turn AI consultation agent running on Vertex AI Agent Runtime (Reasoning Engine) to dynamically formulate each subsequent question based on the customer's prior responses. 
 
 The architecture strictly decouples **diagnostic consultation** from **product matching & offer generation**:
-- **The Quizly Agent**: Acts as an elite optical stylist. It asks questions with high diagnostic precision across 4 pillars (Cephalometrics, Ergonomics, Lens Optics, Style Semiotics) to maximize buyer confidence and extract high-fidelity fit parameters (7 to 15 questions total).
+- **The Quizly Agent**: Acts as an elite optical stylist. It asks questions with high diagnostic precision across 5 pillars (Cephalometrics, Ergonomics, Lens Optics, Style Semiotics, Commercial) to maximize buyer confidence and extract high-fidelity fit parameters (8 questions total).
 - **The Downstream Recommendation & VTO Engine**: Takes the completed diagnostic profile, matches the #1 hero sunglasses and runner-up pairs from the catalog (`sunglasses.jsonl`), generates personalized "Why It Fits You" conversion rationales, and renders the 2D MediaPipe Visual Try-On (VTO) overlay.
 
 ---
@@ -34,7 +34,7 @@ flowchart TD
 
 ---
 
-### 3. Step-by-Step Diagnostic Decision Loop (7–15 Question Funnel)
+### 3. Step-by-Step Diagnostic Decision Loop (8 Question Funnel)
 
 Each turn executes the following cycle:
 
@@ -56,7 +56,6 @@ Each turn executes the following cycle:
                       │
                       ▼
  3. Select Next Question (Fulfills QuestionDto contract)
-    - "binary": Exactly 2 answers
     - "singleChoice": 2 to 4 answers
     - "multiChoice": Exactly 4 answers
                       │
@@ -74,11 +73,7 @@ The backend exposes `POST /quiz/submit-answer` implemented in [`apps/backend/src
 
 #### Supported Question Types
 ```typescript
-export const QUESTION_TYPES = [
-  'binary',
-  'multiChoice',
-  'singleChoice',
-] as const;
+export const QUESTION_TYPES = ['singleChoice', 'multiChoice'] as const;
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 ```
 
@@ -89,7 +84,7 @@ The frontend sends an array containing every question asked so far along with th
 export class AnsweredQuestionDto {
   question: string;
   answers: string[];
-  typeOfQuestion: 'binary' | 'singleChoice' | 'multiChoice';
+  typeOfQuestion: 'singleChoice' | 'multiChoice';
   selectedAnswers: string[];
 }
 ```
@@ -98,12 +93,12 @@ export class AnsweredQuestionDto {
 ```json
 [
   {
-    "question": "Is your face noticeably longer than it is wide, or about equal?",
+    "question": "Is your face longer than it is wide, or about equal?",
     "answers": [
       "Noticeably longer than wide",
-      "About equal in length and width"
+      "About equal"
     ],
-    "typeOfQuestion": "binary",
+    "typeOfQuestion": "singleChoice",
     "selectedAnswers": [
       "Noticeably longer than wide"
     ]
@@ -133,7 +128,7 @@ export class NextQuestionResponseDto {
 export class QuestionDto {
   question: string;
   answers: string[];
-  typeOfQuestion: 'binary' | 'singleChoice' | 'multiChoice';
+  typeOfQuestion: 'singleChoice' | 'multiChoice';
 }
 ```
 
@@ -153,7 +148,7 @@ export class QuestionDto {
 }
 ```
 
-*Example B (Survey Complete after 7–15 Questions):*
+*Example B (Survey Complete after 8 Questions):*
 ```json
 {
   "nextQuestion": null

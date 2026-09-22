@@ -1,31 +1,42 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayNotEmpty, IsArray, IsIn, IsString } from 'class-validator';
 
-export const QUESTION_TYPES = [
-  'binary',
-  'multiChoice',
-  'singleChoice',
-] as const;
+export const QUESTION_TYPES = ['singleChoice', 'multiChoice'] as const;
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 
 export class QuestionDto {
-  @ApiProperty({ example: 'Do you wear glasses every day?' })
+  @ApiProperty({
+    example: 'What frustrates you most about sunglasses staying in place?',
+  })
   @IsString()
   question: string;
 
-  @ApiProperty({ type: [String], example: ['Yes', 'No'] })
+  @ApiProperty({
+    type: [String],
+    description:
+      'singleChoice: 2 to 4 options. multiChoice: exactly 4 options.',
+    example: [
+      'They slide down my nose constantly',
+      'They leave red pinch marks on my nose',
+      'They sit too high, above my eyebrows',
+      'No issues, they fit fine',
+    ],
+  })
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
   answers: string[];
 
-  @ApiProperty({ enum: QUESTION_TYPES, example: 'binary' })
+  @ApiProperty({ enum: QUESTION_TYPES, example: 'singleChoice' })
   @IsIn(QUESTION_TYPES)
   typeOfQuestion: QuestionType;
 }
 
 export class AnsweredQuestionDto extends QuestionDto {
-  @ApiProperty({ type: [String], example: ['Yes'] })
+  @ApiProperty({
+    type: [String],
+    example: ['They slide down my nose constantly'],
+  })
   @IsArray()
   @IsString({ each: true })
   selectedAnswers: string[];

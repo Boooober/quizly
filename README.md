@@ -8,7 +8,7 @@ Quizly is an adaptive, conversion-focused quiz funnel engineered to maximize sun
 ### 1. Architectural Highlights
 
 - **Decoupled Funnel**:
-  - **Diagnostic Agent (Vertex AI Reasoning Engine / Gemini 2.5 Flash)**: Interactively interviews the user (strictly 7 to 15 screens) across cephalometrics, fit pain points, lifestyle environments, and style semiotics. Builds trust and extracts structured diagnostic signals without making direct product recommendations.
+  - **Diagnostic Agent (Vertex AI Reasoning Engine / Gemini 2.5 Flash)**: Interactively interviews the user (8 screens) across cephalometrics, fit pain points, lifestyle environments, style semiotics and commercial calibration. Builds trust and extracts structured diagnostic signals without making direct product recommendations.
   - **Downstream Recommender & Offer Engine**: Matches the user's answers against the 20 curated sunglasses archetypes in `sunglasses.jsonl`, generating high-converting "Why It Fits You" personalized rationale and discount offers.
   - **Visual Try-On (VTO)**: Real-time 2D canvas overlay using MediaPipe 478 face landmarks for instant in-browser try-on (<50ms latency).
 - **Backend API (NestJS on Cloud Run)**: Implements `POST /quiz/submit-answer` with Swagger OpenAPI specs and rigorous class-validator DTOs.
@@ -21,7 +21,6 @@ Quizly is an adaptive, conversion-focused quiz funnel engineered to maximize sun
 The backend exposes `POST /quiz/submit-answer` ([`apps/backend/src/app.controller.ts`](file:///Users/illia.kazachkovskyi/Documents/Illia%20Project/quizly/apps/backend/src/app.controller.ts)) with DTOs defined in [`apps/backend/src/quiz.dto.ts`](file:///Users/illia.kazachkovskyi/Documents/Illia%20Project/quizly/apps/backend/src/quiz.dto.ts):
 
 #### Supported Question Types
-- `"binary"`: Exactly 2 answer options.
 - `"singleChoice"`: 2 to 4 answer options (single selection).
 - `"multiChoice"`: Exactly 4 answer options (multi-selection).
 
@@ -30,12 +29,12 @@ Send an array of all questions asked so far and the user's selected answers (sen
 ```json
 [
   {
-    "question": "Is your face noticeably longer than it is wide, or about equal?",
+    "question": "Is your face longer than it is wide, or about equal?",
     "answers": [
       "Noticeably longer than wide",
-      "About equal in length and width"
+      "About equal"
     ],
-    "typeOfQuestion": "binary",
+    "typeOfQuestion": "singleChoice",
     "selectedAnswers": [
       "Noticeably longer than wide"
     ]
@@ -44,7 +43,7 @@ Send an array of all questions asked so far and the user's selected answers (sen
 ```
 
 #### Response: `NextQuestionResponseDto`
-Returns the next question to ask, or `nextQuestion: null` when the diagnostic survey is complete (7–15 questions):
+Returns the next question to ask, or `nextQuestion: null` when the diagnostic survey is complete (8 questions):
 ```json
 {
   "nextQuestion": {
@@ -102,7 +101,7 @@ cd apps/backend
 npm install
 npm run start:dev
 ```
-Access the Swagger documentation at: `http://localhost:3000/api`
+Access the Swagger documentation at: `http://localhost:3000/docs`
 
 #### Deploying Infrastructure with Pulumi:
 ```bash

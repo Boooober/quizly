@@ -59,6 +59,19 @@ describe('POST /quiz/submit-answer', () => {
       ])
       .expect(400));
 
+  it('rejects the retired binary type', () =>
+    request(app.getHttpServer())
+      .post('/quiz/submit-answer')
+      .send([
+        {
+          question: 'q',
+          answers: ['a', 'b'],
+          selectedAnswers: ['a'],
+          typeOfQuestion: 'binary',
+        },
+      ])
+      .expect(400));
+
   it('rejects a non-array body', () =>
     request(app.getHttpServer())
       .post('/quiz/submit-answer')
@@ -73,7 +86,7 @@ describe('POST /quiz/submit-answer', () => {
           question: 'q',
           answers: ['a', 'b'],
           selectedAnswers: ['a'],
-          typeOfQuestion: 'binary',
+          typeOfQuestion: 'singleChoice',
         },
       ])
       .expect(200)
@@ -87,7 +100,7 @@ describe('POST /quiz/submit-answer', () => {
           question: 'q',
           answers: ['a', 'b'],
           selectedAnswers: ['a'],
-          typeOfQuestion: 'binary',
+          typeOfQuestion: 'singleChoice',
         },
       ])
       .expect(200)

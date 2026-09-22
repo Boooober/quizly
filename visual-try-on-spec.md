@@ -23,7 +23,7 @@ For a rapid hackathon delivery (under 2 hours), **Google MediaPipe Face Landmark
 The try-on is placed at the high-intent climax of the funnel:
 
 ```
-[Adaptive Quiz: 7–15 Questions]
+[Adaptive Quiz: 8 Questions]
               │
               ▼
 [Step: Snap / Upload Selfie] ───> `<input type="file" accept="image/*" capture="user">`
