@@ -67,7 +67,8 @@ export class AppService {
       'Return {"nextQuestion": null} if you have enough information.',
       '',
       'Your task: pick the single most useful next question for this user. Never repeat a question already asked.',
-      'Questions asked so far and the answers the user selected, as JSON:',
+      `Questions asked so far: ${answers.length}`,
+      'History, as JSON:',
       JSON.stringify(answers),
     );
     const out = (await this.ask(message)) as Partial<NextQuestionResponseDto>;
