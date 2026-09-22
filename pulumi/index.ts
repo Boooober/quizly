@@ -20,7 +20,7 @@ const agent = new gcp.vertex.AiReasoningEngine("quizly-agent", {
                     jsonConfig: JSON.stringify({
                         agent_class: "LlmAgent",
                         name: "quizly",
-                        model: "gemini-2.5-flash",
+                        model: "gemini-3.5-flash",
                         description: "Quiz generator",
                         instruction: fs.readFileSync("agent/prompt.md", "utf8"),
                         // thinking off: cuts ~10s per call; JSON mime keeps replies fence-free
@@ -33,7 +33,12 @@ const agent = new gcp.vertex.AiReasoningEngine("quizly-agent", {
             },
             pythonSpec: { version: "3.13" },
         },
-        deploymentSpec: { minInstances: 3, maxInstances: 10 }, // warm for demo: ~$10/day per instance (4 CPU, 4 GiB)
+        deploymentSpec: {
+            minInstances: 3,
+            maxInstances: 10, // warm for demo: ~$10/day per instance (4 CPU, 4 GiB)
+            // gemini-3.x is served only on the global endpoint, not europe-west1
+            envs: [{ name: "GOOGLE_CLOUD_LOCATION", value: "global" }],
+        },
     },
 });
 const engineName = pulumi.interpolate`projects/${project}/locations/${region}/reasoningEngines/${agent.name}`;
