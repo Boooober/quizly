@@ -9,13 +9,12 @@ import { MultiSelectStep } from './MultiSelectStep';
 import { OnboardingCompleted } from './OnboardingCompleted';
 import { PayloadInspector } from './PayloadInspector';
 
+const pad = (value: number, total: number) =>
+  String(value).padStart(String(total).length, '0');
+
 export const OnboardingShell: React.FC = () => {
-  const {
-    currentStepIndex,
-    isComplete,
-    goToPreviousStep,
-    resetOnboarding,
-  } = useOnboardingStore();
+  const { currentStepIndex, isComplete, goToPreviousStep, resetOnboarding } =
+    useOnboardingStore();
 
   const totalSteps = mockOnboardingSteps.length;
   const currentStep = mockOnboardingSteps[currentStepIndex];
@@ -25,52 +24,58 @@ export const OnboardingShell: React.FC = () => {
     : Math.round(((currentStepIndex + 1) / totalSteps) * 100);
 
   return (
-    <div className="min-h-screen bg-[#0A0B0E] text-zinc-100 flex flex-col selection:bg-amber-400 selection:text-black">
-      {/* Top Animated Progress Bar */}
-      <div className="fixed top-0 inset-x-0 h-1 bg-zinc-900 z-50">
-        <motion.div
-          className="h-full bg-gradient-to-r from-amber-400 to-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6)]"
-          initial={{ width: 0 }}
-          animate={{ width: `${progressPercent}%` }}
-          transition={{ duration: 0.35, ease: 'easeInOut' }}
-        />
-      </div>
+    <div className="flex min-h-dvh flex-col">
+      <a href="#step" className="skip-link">
+        Skip to question
+      </a>
 
-      {/* Main Top Navigation */}
-      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0A0B0E]/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-xl px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-line bg-canvas/80 backdrop-blur-xl">
+        {/* Progress sits on the header edge so there is one fixed chrome layer, not two */}
+        <div
+          role="progressbar"
+          aria-label="Onboarding progress"
+          aria-valuenow={progressPercent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          className="absolute inset-x-0 top-0 h-0.5 bg-white/5"
+        >
+          <motion.div
+            className="h-full bg-accent"
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.35, ease: [0.22, 0.61, 0.36, 1] }}
+          />
+        </div>
+
+        <div className="mx-auto flex max-w-xl items-center justify-between px-4 py-4">
           <div className="w-10">
             {currentStepIndex > 0 && !isComplete && (
               <button
                 type="button"
                 onClick={goToPreviousStep}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-zinc-300 hover:text-white hover:border-white/20 transition-all cursor-pointer active:scale-95"
-                title="Back to previous question"
+                aria-label="Back to previous question"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-line text-zinc-400 transition-colors duration-200 hover:border-line-strong hover:text-white active:scale-95"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
             )}
           </div>
 
-          {/* Minimalist Brandmark */}
-          <div className="text-center">
-            <span className="font-semibold text-xs tracking-[0.25em] uppercase text-zinc-300">
-              Quizly Optics
-            </span>
-          </div>
+          <span className="text-[0.6875rem] font-semibold tracking-[0.24em] text-zinc-400 uppercase">
+            Quizly Optics
+          </span>
 
-          {/* Right Action: Step count & Reset */}
-          <div className="flex items-center gap-2 justify-end w-16">
+          <div className="flex w-16 items-center justify-end gap-2">
             {!isComplete && (
-              <span className="font-mono text-xs text-zinc-400">
-                0{currentStepIndex + 1}/0{totalSteps}
+              <span data-numeric className="font-mono text-xs text-zinc-500">
+                {pad(currentStepIndex + 1, totalSteps)}/{totalSteps}
               </span>
             )}
             <button
               type="button"
               onClick={resetOnboarding}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/5 text-zinc-500 hover:text-zinc-300 hover:border-white/15 transition-all cursor-pointer"
-              title="Reset progress"
+              aria-label="Reset progress and start over"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-transparent text-zinc-600 transition-colors duration-200 hover:border-line hover:text-zinc-300"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
@@ -78,32 +83,31 @@ export const OnboardingShell: React.FC = () => {
         </div>
       </header>
 
-      {/* Viewport Content */}
       <main
-        className={`flex-1 mx-auto w-full px-4 sm:px-6 pt-6 sm:pt-10 transition-all duration-300 ${
-          isComplete ? 'max-w-3xl' : 'max-w-xl'
-        }`}
+        id="step"
+        className="mx-auto w-full max-w-xl flex-1 px-4 pt-8 sm:px-6 sm:pt-14"
       >
         <AnimatePresence mode="wait">
           {isComplete ? (
-            <motion.div
+            <motion.section
               key="completed"
-              initial={{ opacity: 0, y: 16 }}
+              aria-label="Results"
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
+              exit={{ opacity: 0, y: -14 }}
               transition={{ duration: 0.25 }}
             >
               <OnboardingCompleted />
-            </motion.div>
+            </motion.section>
           ) : (
             currentStep && (
-              <motion.div
+              <motion.section
                 key={currentStep.id}
-                initial={{ opacity: 0, x: 20 }}
+                aria-label={`Question ${currentStepIndex + 1} of ${totalSteps}`}
+                initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.22, ease: 'easeInOut' }}
-                className="flex flex-col"
+                exit={{ opacity: 0, x: -16 }}
+                transition={{ duration: 0.22, ease: [0.22, 0.61, 0.36, 1] }}
               >
                 <QuestionHeader
                   category={currentStep.category}
@@ -112,23 +116,16 @@ export const OnboardingShell: React.FC = () => {
                 />
 
                 {currentStep.mode === 'single_select' ? (
-                  <SingleSelectStep
-                    step={currentStep}
-                    totalSteps={totalSteps}
-                  />
+                  <SingleSelectStep step={currentStep} totalSteps={totalSteps} />
                 ) : (
-                  <MultiSelectStep
-                    step={currentStep}
-                    totalSteps={totalSteps}
-                  />
+                  <MultiSelectStep step={currentStep} totalSteps={totalSteps} />
                 )}
-              </motion.div>
+              </motion.section>
             )
           )}
         </AnimatePresence>
       </main>
 
-      {/* Live State & Cumulative Payload Inspector */}
       <PayloadInspector />
     </div>
   );
