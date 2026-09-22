@@ -23,10 +23,16 @@ export async function computeRecommendation(
 ): Promise<RecommendationResult> {
   try {
     const data = await fetchRecommendation(history);
-    const hero =
-      sunglassesCatalog.find((p) => p.id === data.hero?.id) ?? sunglassesCatalog[0];
+    const matchProduct = (id?: string) => {
+      if (!id) return null;
+      return sunglassesCatalog.find(
+        (p) => p.id === id || p.id.includes(id) || id.includes(p.id)
+      ) ?? null;
+    };
+
+    const hero = matchProduct(data.hero?.id) ?? sunglassesCatalog[0];
     const alternatives = (data.alternatives ?? [])
-      .map((a) => sunglassesCatalog.find((p) => p.id === a.id))
+      .map((a) => matchProduct(a?.id))
       .filter((p): p is SunglassesProduct => !!p && p.id !== hero.id);
 
     return {

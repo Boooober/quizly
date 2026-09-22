@@ -7,8 +7,9 @@ import { questionToStep } from '../utils/questionToStep';
 import { QuestionHeader } from './QuestionHeader';
 import { SingleSelectStep } from './SingleSelectStep';
 import { MultiSelectStep } from './MultiSelectStep';
-import { OnboardingCompleted } from './OnboardingCompleted';
 import { QuizLoader } from './QuizLoader';
+import { PostQuizFlow } from './PostQuizFlow';
+import { PayloadInspector } from './PayloadInspector';
 
 export const OnboardingShell: React.FC = () => {
   const {
@@ -79,13 +80,13 @@ export const OnboardingShell: React.FC = () => {
           {isComplete ? (
             <motion.section
               key="completed"
-              aria-label="Your fit profile"
+              aria-label="Your fit profile and try-on"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
             >
-              <OnboardingCompleted />
+              <PostQuizFlow />
             </motion.section>
           ) : status === 'error' ? (
             <motion.section
