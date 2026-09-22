@@ -28,7 +28,7 @@ const agent = new gcp.vertex.AiReasoningEngine("quizly-agent", {
             },
             pythonSpec: { version: "3.13" },
         },
-        deploymentSpec: { minInstances: 0, maxInstances: 2 }, // ponytail: dev sizing, cold starts accepted
+        deploymentSpec: { minInstances: 3, maxInstances: 10 }, // warm for demo: ~$10/day per instance (4 CPU, 4 GiB)
     },
 });
 const engineName = pulumi.interpolate`projects/${project}/locations/${region}/reasoningEngines/${agent.name}`;
@@ -71,6 +71,7 @@ const service = new gcp.cloudrunv2.Service("backend", {
     deletionProtection: false,
     invokerIamDisabled: true, // public; Editor role cannot set run IAM policy, and this needs no binding
     template: {
+        scaling: { minInstanceCount: 1 },
         serviceAccount: sa.email,
         containers: [{
             image: image.ref,
