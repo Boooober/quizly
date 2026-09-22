@@ -166,6 +166,51 @@ new gcp.storage.BucketIAMMember("images-public-read", {
 });
 
 export const imagesBucket = images.name;
+// --- CI deploys: GitHub Actions federates into a deployer service account, no keys.
+const GITHUB_REPO = "Boooober/quizly";
+new gcp.projects.Service("sts", { service: "sts.googleapis.com", disableOnDestroy: false });
+const pool = new gcp.iam.WorkloadIdentityPool("github", {
+    workloadIdentityPoolId: "github",
+    displayName: "GitHub Actions",
+});
+const poolProvider = new gcp.iam.WorkloadIdentityPoolProvider("github", {
+    workloadIdentityPoolId: pool.workloadIdentityPoolId,
+    workloadIdentityPoolProviderId: "github",
+    displayName: "GitHub OIDC",
+    attributeMapping: {
+        "google.subject": "assertion.sub",
+        "attribute.repository": "assertion.repository",
+    },
+    attributeCondition: `assertion.repository == "${GITHUB_REPO}"`,
+    oidc: { issuerUri: "https://token.actions.githubusercontent.com" },
+});
+const deployer = new gcp.serviceaccount.Account("deployer", {
+    accountId: "quizly-deployer",
+    displayName: "quizly CI deployer",
+});
+// Only workflows from this repo may impersonate the deployer.
+new gcp.serviceaccount.IAMMember("deployer-wif", {
+    serviceAccountId: deployer.name,
+    role: "roles/iam.workloadIdentityUser",
+    member: pulumi.interpolate`principalSet://iam.googleapis.com/${pool.name}/attribute.repository/${GITHUB_REPO}`,
+});
+[
+    "roles/run.admin",
+    "roles/artifactregistry.writer",
+    "roles/aiplatform.admin",
+    "roles/discoveryengine.admin",
+    "roles/storage.admin",
+    "roles/iam.serviceAccountUser", // to deploy Cloud Run as the backend SA
+].forEach((role) =>
+    new gcp.projects.IAMMember(`deployer-${role.split("/")[1].replace(/\./g, "-")}`, {
+        project,
+        role,
+        member: pulumi.interpolate`serviceAccount:${deployer.email}`,
+    }),
+);
+
+export const ciWorkloadIdentityProvider = poolProvider.name;
+export const ciServiceAccount = deployer.email;
 export const backendUrl = service.uri;
 export const frontendUrl = frontend.uri;
 export const agentEngine = engineName;
