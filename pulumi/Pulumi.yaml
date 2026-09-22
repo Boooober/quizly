@@ -1,0 +1,7 @@
+name: quizly
+description: quizly infra
+runtime: nodejs
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: gcp-typescript
