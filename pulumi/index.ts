@@ -114,14 +114,16 @@ const registries = [{
     username: "oauth2accesstoken",
     password: gcp.organizations.getClientConfigOutput().accessToken,
 }];
-const buildImage = (name: string) => new docker.Image(name, {
-    tags: [pulumi.interpolate`${registry}/${project}/${repo.repositoryId}/${name}:latest`],
-    context: { location: `../apps/${name}` },
-    platforms: ["linux/amd64"],
-    push: true,
-    buildOnPreview: false,
-    registries,
-});
+const buildImage = (name: string, buildArgs?: Record<string, pulumi.Input<string>>) =>
+    new docker.Image(name, {
+        tags: [pulumi.interpolate`${registry}/${project}/${repo.repositoryId}/${name}:latest`],
+        context: { location: `../apps/${name}` },
+        platforms: ["linux/amd64"],
+        push: true,
+        buildOnPreview: false,
+        buildArgs,
+        registries,
+    });
 const image = buildImage("backend");
 
 // --- Backend runtime: Cloud Run as a service account allowed to query the agent.
@@ -155,7 +157,7 @@ const frontend = new gcp.cloudrunv2.Service("frontend", {
     location: region,
     deletionProtection: false,
     invokerIamDisabled: true,
-    template: { containers: [{ image: buildImage("frontend").ref }] },
+    template: { containers: [{ image: buildImage("frontend", { VITE_API_URL: service.uri }).ref }] },
 });
 
 // --- Images: sunglasses photos (PNG). Publicly readable.
