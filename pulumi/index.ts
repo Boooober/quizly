@@ -23,6 +23,11 @@ const agent = new gcp.vertex.AiReasoningEngine("quizly-agent", {
                         model: "gemini-2.5-flash",
                         description: "Quiz generator",
                         instruction: fs.readFileSync("agent/prompt.md", "utf8"),
+                        // thinking off: cuts ~10s per call; JSON mime keeps replies fence-free
+                        generate_content_config: {
+                            thinkingConfig: { thinkingBudget: 0 },
+                            responseMimeType: "application/json",
+                        },
                     }),
                 },
             },

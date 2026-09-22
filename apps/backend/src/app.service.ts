@@ -42,8 +42,14 @@ const PROMPT_FIELDS = [
 const CATALOG_FOR_PROMPT = JSON.stringify(
   CATALOG.map((i) => Object.fromEntries(PROMPT_FIELDS.map((k) => [k, i[k]]))),
 );
-const ONLY_JSON =
-  'Respond with JSON only, exactly in the shape below, regardless of any other output format you were given.';
+/** The base prompt fixes its own output shape, so every request opens by overriding it. */
+const override = (shape: string, ...rest: string[]) =>
+  [
+    'TASK OVERRIDE. For this request only, ignore any output format described in your system instructions.',
+    'Return exactly this JSON object and nothing else:',
+    shape,
+    ...rest,
+  ].join('\n');
 
 @Injectable()
 export class AppService {
@@ -56,14 +62,14 @@ export class AppService {
     answers: AnsweredQuestionDto[],
   ): Promise<NextQuestionResponseDto> {
     if (answers.length >= MAX_QUESTIONS) return { nextQuestion: null };
-    const message = [
+    const message = override(
+      `{"nextQuestion": {"question": string, "answers": string[], "typeOfQuestion": ${QUESTION_TYPES.map((t) => `"${t}"`).join(' | ')}}}`,
+      'Return {"nextQuestion": null} if you have enough information.',
+      '',
+      'Your task: pick the single most useful next question for this user. Never repeat a question already asked.',
       'Questions asked so far and the answers the user selected, as JSON:',
       JSON.stringify(answers),
-      '',
-      ONLY_JSON,
-      `{"nextQuestion": {"question": string, "answers": string[], "typeOfQuestion": ${QUESTION_TYPES.map((t) => `"${t}"`).join(' | ')}}}`,
-      'Do not repeat a question that was already asked. If you have enough information, return {"nextQuestion": null}.',
-    ].join('\n');
+    );
     const out = (await this.ask(message)) as Partial<NextQuestionResponseDto>;
     if (!out || typeof out !== 'object' || !('nextQuestion' in out)) {
       throw new BadGatewayException({
@@ -77,17 +83,17 @@ export class AppService {
   async recommend(
     answers: AnsweredQuestionDto[],
   ): Promise<RecommendationResponseDto> {
-    const message = [
+    const message = override(
+      '{"heroId": string, "alternativeIds": [string, string], "why": [string, string, string]}',
+      '"why" are short, persuasive reasons for the hero pick, each tied to a specific answer the user gave.',
+      '',
+      'Your task: pick the best sunglasses for this user. Use only ids from the catalog below.',
       'Questions asked and the answers the user selected, as JSON:',
       JSON.stringify(answers),
       '',
-      'Sunglasses catalog, as JSON. Choose only from these ids:',
+      'Sunglasses catalog, as JSON:',
       CATALOG_FOR_PROMPT,
-      '',
-      ONLY_JSON,
-      '{"heroId": string, "alternativeIds": [string, string], "why": [string, string, string]}',
-      '"why" are short, personal reasons for the hero pick, each tied to a specific answer the user gave.',
-    ].join('\n');
+    );
     const out = (await this.ask(message)) as AgentPick;
     const rec = buildRecommendation(out);
     if (!rec)
