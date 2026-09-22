@@ -6,7 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { NextQuestionResponseDto } from './quiz.dto';
 
-describe('POST /quiz/next', () => {
+describe('POST /quiz/submit-answer', () => {
   let app: INestApplication<App>;
   const reply: NextQuestionResponseDto = {
     nextQuestion: {
@@ -33,7 +33,7 @@ describe('POST /quiz/next', () => {
 
   it('rejects an unknown question type', () =>
     request(app.getHttpServer())
-      .post('/quiz/next')
+      .post('/quiz/submit-answer')
       .send([
         {
           question: 'q',
@@ -46,13 +46,13 @@ describe('POST /quiz/next', () => {
 
   it('rejects a non-array body', () =>
     request(app.getHttpServer())
-      .post('/quiz/next')
+      .post('/quiz/submit-answer')
       .send({ question: 'q' })
       .expect(400));
 
   it('returns the next question for a valid list', () =>
     request(app.getHttpServer())
-      .post('/quiz/next')
+      .post('/quiz/submit-answer')
       .send([
         {
           question: 'q',

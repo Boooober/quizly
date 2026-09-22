@@ -6,31 +6,12 @@ import {
   QUESTION_TYPES,
 } from './quiz.dto';
 
-export type QuizRequest = {
-  topic: string;
-  count?: number;
-  difficulty?: string;
-  source?: string;
-};
-
 @Injectable()
 export class AppService {
   private readonly engine = process.env.AGENT_ENGINE ?? '';
   private readonly auth = new GoogleAuth({
     scopes: 'https://www.googleapis.com/auth/cloud-platform',
   });
-
-  generateQuiz(req: QuizRequest): Promise<unknown> {
-    const message = [
-      `Topic: ${req.topic}`,
-      req.count && `Number of questions: ${req.count}`,
-      req.difficulty && `Difficulty: ${req.difficulty}`,
-      req.source && `Source text:\n${req.source}`,
-    ]
-      .filter(Boolean)
-      .join('\n');
-    return this.ask(message);
-  }
 
   async nextQuestion(
     answers: AnsweredQuestionDto[],
