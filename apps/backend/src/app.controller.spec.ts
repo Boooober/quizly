@@ -4,7 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { NextQuestionResponseDto } from './quiz.dto';
+import { NextQuestionResponseDto, RecommendationResponseDto } from './quiz.dto';
 
 describe('POST /quiz/submit-answer', () => {
   let app: INestApplication<App>;
@@ -16,13 +16,28 @@ describe('POST /quiz/submit-answer', () => {
     },
   };
 
+  const rec: RecommendationResponseDto = {
+    hero: {
+      id: 'sg-01',
+      title: 'Navigator',
+      price: 149,
+      currency: 'USD',
+      imageUrl: 'https://x/1.png',
+    },
+    alternatives: [],
+    why: ['fits'],
+  };
+
   beforeAll(async () => {
     const mod = await Test.createTestingModule({
       controllers: [AppController],
       providers: [
         {
           provide: AppService,
-          useValue: { nextQuestion: () => Promise.resolve(reply) },
+          useValue: {
+            nextQuestion: () => Promise.resolve(reply),
+            recommend: () => Promise.resolve(rec),
+          },
         },
       ],
     }).compile();
@@ -63,4 +78,18 @@ describe('POST /quiz/submit-answer', () => {
       ])
       .expect(200)
       .expect(reply));
+
+  it('POST /quiz/recommend returns the recommendation for a valid list', () =>
+    request(app.getHttpServer())
+      .post('/quiz/recommend')
+      .send([
+        {
+          question: 'q',
+          answers: ['a', 'b'],
+          selectedAnswers: ['a'],
+          typeOfQuestion: 'binary',
+        },
+      ])
+      .expect(200)
+      .expect(rec));
 });

@@ -7,7 +7,14 @@ import {
 } from '@nestjs/common';
 import { ApiBody, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { AppService } from './app.service';
-import { AnsweredQuestionDto, NextQuestionResponseDto } from './quiz.dto';
+import {
+  AnsweredQuestionDto,
+  NextQuestionResponseDto,
+  RecommendationResponseDto,
+} from './quiz.dto';
+
+const Answers = () =>
+  Body(new ParseArrayPipe({ items: AnsweredQuestionDto, whitelist: true }));
 
 @Controller('quiz')
 export class AppController {
@@ -18,14 +25,28 @@ export class AppController {
   @ApiOperation({
     summary: 'Next survey question',
     description:
-      'Send every question asked so far with the answers the user selected. Send [] to start. Returns the next question, or nextQuestion: null when the survey is complete.',
+      'Send every question asked so far with the answers the user selected. Send [] to start. Returns the next question, or nextQuestion: null when the survey is complete (agent decided, or 8 questions reached). Then call /quiz/recommend.',
   })
   @ApiBody({ type: [AnsweredQuestionDto] })
   @ApiOkResponse({ type: NextQuestionResponseDto })
   submitAnswer(
-    @Body(new ParseArrayPipe({ items: AnsweredQuestionDto, whitelist: true }))
-    answers: AnsweredQuestionDto[],
+    @Answers() answers: AnsweredQuestionDto[],
   ): Promise<NextQuestionResponseDto> {
     return this.app.nextQuestion(answers);
+  }
+
+  @Post('recommend')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Recommend sunglasses from the catalog',
+    description:
+      'Send all answered questions. Returns the hero product, two alternatives and personal reasons.',
+  })
+  @ApiBody({ type: [AnsweredQuestionDto] })
+  @ApiOkResponse({ type: RecommendationResponseDto })
+  recommend(
+    @Answers() answers: AnsweredQuestionDto[],
+  ): Promise<RecommendationResponseDto> {
+    return this.app.recommend(answers);
   }
 }
