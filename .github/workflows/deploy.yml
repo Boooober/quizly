@@ -1,19 +1,12 @@
-# Disabled on purpose: manual start only, and it will not work until the two
-# prerequisites below are done. Nothing here runs by itself.
+# Disabled on purpose: manual start only. Nothing here runs by itself.
 #
-# 1. Pulumi state currently lives on a laptop (`pulumi login --local`, file://~).
-#    CI cannot see it. Move it to a bucket first:
-#      gsutil mb -l europe-west1 gs://team3-507508-quizly-state
-#      pulumi stack export --file dev.json
-#      pulumi login gs://team3-507508-quizly-state && pulumi stack init dev
-#      pulumi stack import --file dev.json
+# State lives in pulumi/.pulumi/ in this repo, so a run that changes anything
+# must commit the updated state back, otherwise the next run works from a stale
+# copy. The step at the end does that.
 #
-# 2. Repository secrets:
-#      GCP_WORKLOAD_IDENTITY_PROVIDER  projects/994382662011/locations/global/workloadIdentityPools/<pool>/providers/<provider>
-#      GCP_SERVICE_ACCOUNT             deployer SA email, needs roles/run.admin,
-#                                      artifactregistry.writer, aiplatform.admin,
-#                                      discoveryengine.admin, storage.admin
-#      PULUMI_CONFIG_PASSPHRASE        the stack passphrase
+# Secrets, all already set: GCP_WORKLOAD_IDENTITY_PROVIDER, GCP_SERVICE_ACCOUNT,
+# PULUMI_CONFIG_PASSPHRASE. The deployer SA and the federation are defined in
+# pulumi/index.ts.
 name: Deploy
 
 on:
@@ -25,7 +18,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write # to commit the updated Pulumi state back
   id-token: write # for Workload Identity Federation
 
 jobs:
@@ -53,9 +46,18 @@ jobs:
         working-directory: pulumi
 
       # Builds both images and rolls out agent, backend and frontend.
+      # The backend url comes from pulumi/Pulumi.yaml: the state in this repo.
       - uses: pulumi/actions@v6
         with:
           command: up
           stack-name: dev
           work-dir: pulumi
-          # cloud-url: gs://team3-507508-quizly-state   # uncomment after step 1
+
+      - name: Commit updated state
+        run: |
+          git add pulumi/.pulumi
+          git diff --cached --quiet && exit 0
+          git -c user.name='github-actions[bot]' \
+              -c user.email='github-actions[bot]@users.noreply.github.com' \
+              commit -m "chore(state): pulumi up from ${GITHUB_SHA::7}"
+          git push

@@ -1,2 +1,5 @@
 /bin/
 /node_modules/
+# The state itself is committed; its rolling backups are not.
+/.pulumi/**/*.bak
+/.pulumi/**/*.bak.attrs

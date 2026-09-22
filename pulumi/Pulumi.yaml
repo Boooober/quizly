@@ -1,6 +1,11 @@
 name: quizly
 description: quizly infra
 runtime: nodejs
+# State is committed to this repo under .pulumi/ so CI and teammates share it.
+# Reading it still needs PULUMI_CONFIG_PASSPHRASE, which is never committed.
+# Deploys are serialised by git: pull before `pulumi up`, commit the state after.
+backend:
+  url: file://./
 config:
   pulumi:tags:
     value:
