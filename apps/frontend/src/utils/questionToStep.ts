@@ -14,17 +14,10 @@ function toOption(answer: string): OptionUI {
 }
 
 /** Render-time adapter from the wire contract to the UI's own step shape. */
-export function questionToStep(
-  question: QuestionDto,
-  questionNumber: number,
-  totalQuestions: number,
-): OnboardingStepUI {
+export function questionToStep(question: QuestionDto): OnboardingStepUI {
   const isMulti = question.typeOfQuestion === 'multiChoice';
   return {
     id: question.question,
-    stepNumber: questionNumber,
-    totalSteps: totalQuestions,
-    progressPercent: Math.round(((questionNumber - 1) / totalQuestions) * 100),
     question: question.question,
     helperText: isMulti ? 'Select all that apply' : 'Choose one to continue',
     mode: isMulti ? 'multi_select' : 'single_select',

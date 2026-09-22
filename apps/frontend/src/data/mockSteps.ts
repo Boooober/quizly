@@ -3,9 +3,6 @@ import type { OnboardingStepUI } from '../types/onboarding';
 export const mockOnboardingSteps: OnboardingStepUI[] = [
   {
     id: 'step_width_fit',
-    stepNumber: 1,
-    totalSteps: 5,
-    progressPercent: 20,
     category: 'Anatomy & Sizing',
     question: 'How do standard sunglasses typically fit your head width?',
     helperText: 'Choose the one that best reflects your past experience',
@@ -32,9 +29,6 @@ export const mockOnboardingSteps: OnboardingStepUI[] = [
   },
   {
     id: 'step_fit_friction',
-    stepNumber: 2,
-    totalSteps: 5,
-    progressPercent: 40,
     category: 'Fit & Friction',
     question: 'Tell us about your fit and feel. Any specific issues to eliminate?',
     helperText: 'Select all that apply to you',
@@ -70,9 +64,6 @@ export const mockOnboardingSteps: OnboardingStepUI[] = [
   },
   {
     id: 'step_bridge_profile',
-    stepNumber: 3,
-    totalSteps: 5,
-    progressPercent: 60,
     category: 'Bridge Ergonomics',
     question: 'What nose-pad style works best for your nasal bridge?',
     helperText: 'Choose one preference',
@@ -104,9 +95,6 @@ export const mockOnboardingSteps: OnboardingStepUI[] = [
   },
   {
     id: 'step_lifestyle_setting',
-    stepNumber: 4,
-    totalSteps: 5,
-    progressPercent: 80,
     category: 'Light & Environments',
     question: 'Where will you wear these sunglasses the most?',
     helperText: 'Select all environments relevant to your lifestyle',
@@ -143,9 +131,6 @@ export const mockOnboardingSteps: OnboardingStepUI[] = [
   },
   {
     id: 'step_lens_privacy',
-    stepNumber: 5,
-    totalSteps: 5,
-    progressPercent: 100,
     category: 'Optical Privacy',
     question: 'How dark and private do you prefer your lenses to be?',
     helperText: 'Choose your lens tint depth',

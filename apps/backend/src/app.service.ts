@@ -61,12 +61,7 @@ export class AppService {
   async nextQuestion(
     answers: AnsweredQuestionDto[],
   ): Promise<NextQuestionResponseDto> {
-    if (answers.length >= MAX_QUESTIONS)
-      return {
-        nextQuestion: null,
-        questionNumber: answers.length,
-        totalQuestions: MAX_QUESTIONS,
-      };
+    if (answers.length >= MAX_QUESTIONS) return { nextQuestion: null };
     const message = override(
       `{"nextQuestion": {"question": string, "answers": string[], "typeOfQuestion": ${QUESTION_TYPES.map((t) => `"${t}"`).join(' | ')}}}`,
       'Return {"nextQuestion": null} if you have enough information.',
@@ -83,12 +78,7 @@ export class AppService {
         agent: out,
       });
     }
-    const nextQuestion = out.nextQuestion ?? null;
-    return {
-      nextQuestion,
-      questionNumber: answers.length + (nextQuestion ? 1 : 0),
-      totalQuestions: MAX_QUESTIONS,
-    };
+    return { nextQuestion: out.nextQuestion ?? null };
   }
 
   async recommend(

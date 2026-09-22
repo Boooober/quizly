@@ -23,8 +23,6 @@ export interface AnsweredQuestionDto extends QuestionDto {
 export interface NextQuestionResponseDto {
   /** null when the survey is complete. */
   nextQuestion: QuestionDto | null;
-  questionNumber: number;
-  totalQuestions: number;
 }
 
 export interface ProductDto {

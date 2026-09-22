@@ -8,13 +8,10 @@ import { QuestionHeader } from './QuestionHeader';
 import { SingleSelectStep } from './SingleSelectStep';
 import { MultiSelectStep } from './MultiSelectStep';
 import { OnboardingCompleted } from './OnboardingCompleted';
-import { PayloadInspector } from './PayloadInspector';
 
 export const OnboardingShell: React.FC = () => {
   const {
     currentQuestion,
-    questionNumber,
-    totalQuestions,
     history,
     status,
     error,
@@ -30,16 +27,8 @@ export const OnboardingShell: React.FC = () => {
     if (status === 'idle' && !isComplete && !currentQuestion) void start();
   }, [status, isComplete, currentQuestion, start]);
 
-  const totalSteps = totalQuestions || 0;
   const currentStep =
-    currentQuestion && !isComplete
-      ? questionToStep(currentQuestion, questionNumber, totalSteps)
-      : null;
-  const progress = isComplete
-    ? 1
-    : totalSteps > 0
-      ? (questionNumber - 1) / totalSteps
-      : 0;
+    currentQuestion && !isComplete ? questionToStep(currentQuestion) : null;
   const isLoading = status === 'loading';
 
   return (
@@ -77,25 +66,6 @@ export const OnboardingShell: React.FC = () => {
                 <RotateCcw className="h-4 w-4" />
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Single hairline track, as under the reference carousels */}
-        <div
-          role="progressbar"
-          aria-label="Progress"
-          aria-valuenow={Math.round(progress * 100)}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          className="mx-auto max-w-xl px-4"
-        >
-          <div className="h-px w-full bg-rule">
-            <motion.div
-              className="h-full origin-left bg-ink"
-              initial={false}
-              animate={{ scaleX: progress }}
-              transition={{ duration: 0.3, ease: [0.32, 0.72, 0.29, 1] }}
-            />
           </div>
         </div>
       </header>
@@ -156,16 +126,14 @@ export const OnboardingShell: React.FC = () => {
             (
               <motion.section
                 key={currentStep.id}
-                aria-label={`Question ${questionNumber} of ${totalSteps}`}
+                aria-label={`Question ${history.length + 1}`}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <QuestionHeader
-                  fieldNumber={questionNumber}
-                  totalFields={totalSteps}
-                  pigment={pigmentForIndex(questionNumber - 1)}
+                  pigment={pigmentForIndex(history.length)}
                   category={currentStep.category}
                   question={currentStep.question}
                   helperText={currentStep.helperText}
@@ -181,8 +149,6 @@ export const OnboardingShell: React.FC = () => {
           )}
         </AnimatePresence>
       </main>
-
-      <PayloadInspector />
     </div>
   );
 };

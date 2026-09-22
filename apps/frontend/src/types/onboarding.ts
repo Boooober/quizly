@@ -9,9 +9,6 @@ export interface OptionUI {
 
 export interface OnboardingStepUI {
   id: string;
-  stepNumber: number;
-  totalSteps: number;
-  progressPercent: number; // 0 to 100 for top progress indicator
   category?: string;       // e.g. "Fit & Feel", "Ergonomics", "Optical Environment"
   question: string;
   helperText?: string;     // e.g. "Select all that apply" or "Choose one to continue"

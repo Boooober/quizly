@@ -9,16 +9,12 @@ interface OnboardingStoreState {
   /** The wire contract, and the only source of truth. Sent verbatim on every call. */
   history: AnsweredQuestionDto[];
   currentQuestion: QuestionDto | null;
-  questionNumber: number;
-  totalQuestions: number;
 
   /** Question text -> selected option labels. Derived from history, for the UI. */
   answers: Record<string, string[]>;
   /** In-progress multi-select picks, before Continue commits them. */
   draftAnswers: Record<string, string[]>;
 
-  /** Exactly what was last POSTed, for the payload inspector. */
-  lastRequest: AnsweredQuestionDto[] | null;
   status: QuizStatus;
   error: string | null;
   isComplete: boolean;
@@ -43,7 +39,6 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
         set({
           history,
           answers: answersFromHistory(history),
-          lastRequest: history,
           status: 'loading',
           error: null,
         });
@@ -51,8 +46,6 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
           const res = await fetchNextQuestion(history);
           set({
             currentQuestion: res.nextQuestion,
-            questionNumber: res.questionNumber,
-            totalQuestions: res.totalQuestions,
             isComplete: res.nextQuestion === null,
             status: 'ready',
           });
@@ -75,11 +68,8 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       return {
         history: [],
         currentQuestion: null,
-        questionNumber: 0,
-        totalQuestions: 0,
         answers: {},
         draftAnswers: {},
-        lastRequest: null,
         status: 'idle',
         error: null,
         isComplete: false,
@@ -131,11 +121,8 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
           set({
             history: [],
             currentQuestion: null,
-            questionNumber: 0,
-            totalQuestions: 0,
             answers: {},
             draftAnswers: {},
-            lastRequest: null,
             status: 'idle',
             error: null,
             isComplete: false,
@@ -152,8 +139,6 @@ export const useOnboardingStore = create<OnboardingStoreState>()(
       partialize: (state) => ({
         history: state.history,
         currentQuestion: state.currentQuestion,
-        questionNumber: state.questionNumber,
-        totalQuestions: state.totalQuestions,
         answers: state.answers,
         draftAnswers: state.draftAnswers,
         isComplete: state.isComplete,

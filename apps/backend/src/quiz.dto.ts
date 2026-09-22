@@ -50,19 +50,6 @@ export class NextQuestionResponseDto {
       'null when the agent has enough answers and the survey is complete',
   })
   nextQuestion: QuestionDto | null;
-
-  @ApiProperty({
-    example: 3,
-    description:
-      '1-based position of nextQuestion in the funnel. Equals the number of questions answered once the survey is complete.',
-  })
-  questionNumber: number;
-
-  @ApiProperty({
-    example: 8,
-    description: 'Length of the funnel, so the client can render progress.',
-  })
-  totalQuestions: number;
 }
 
 export class ProductDto {

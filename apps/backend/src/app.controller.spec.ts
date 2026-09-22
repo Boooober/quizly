@@ -14,8 +14,6 @@ describe('POST /quiz/submit-answer', () => {
       answers: ['Round', 'Square'],
       typeOfQuestion: 'singleChoice',
     },
-    questionNumber: 1,
-    totalQuestions: 8,
   };
 
   const rec: RecommendationResponseDto = {
