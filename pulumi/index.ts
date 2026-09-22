@@ -20,7 +20,7 @@ const agent = new gcp.vertex.AiReasoningEngine("quizly-agent", {
                     jsonConfig: JSON.stringify({
                         agent_class: "LlmAgent",
                         name: "quizly",
-                        model: "gemini-flash-latest",
+                        model: "gemini-2.5-flash",
                         description: "Quiz generator",
                         instruction: fs.readFileSync("agent/prompt.md", "utf8"),
                     }),
@@ -31,7 +31,7 @@ const agent = new gcp.vertex.AiReasoningEngine("quizly-agent", {
         deploymentSpec: { minInstances: 0, maxInstances: 2 }, // ponytail: dev sizing, cold starts accepted
     },
 });
-const engineName = agent.name; // projects/{project}/locations/{region}/reasoningEngines/{id}
+const engineName = pulumi.interpolate`projects/${project}/locations/${region}/reasoningEngines/${agent.name}`;
 
 // --- Backend image: built locally with Docker, pushed to Artifact Registry.
 const repo = new gcp.artifactregistry.Repository("quizly", {
@@ -67,6 +67,7 @@ const service = new gcp.cloudrunv2.Service("backend", {
     name: "quizly-backend",
     location: region,
     deletionProtection: false,
+    invokerIamDisabled: true, // public; Editor role cannot set run IAM policy, and this needs no binding
     template: {
         serviceAccount: sa.email,
         containers: [{
@@ -75,12 +76,14 @@ const service = new gcp.cloudrunv2.Service("backend", {
         }],
     },
 });
-new gcp.cloudrunv2.ServiceIamMember("backend-public", {
-    name: service.name,
+
+// --- Images: sunglasses photos (PNG). Private; grant access when a reader/writer is known.
+const images = new gcp.storage.Bucket("images", {
+    name: `${project}-quizly-images`,
     location: region,
-    role: "roles/run.invoker",
-    member: "allUsers",
+    uniformBucketLevelAccess: true,
 });
 
+export const imagesBucket = images.name;
 export const backendUrl = service.uri;
 export const agentEngine = engineName;
