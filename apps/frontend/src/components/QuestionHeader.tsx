@@ -1,33 +1,43 @@
 import React from 'react';
+import type { Pigment } from '../theme/pigments';
 
 interface QuestionHeaderProps {
+  fieldNumber: number;
+  totalFields: number;
+  pigment: Pigment;
   category?: string;
   question: string;
   helperText?: string;
 }
 
 export const QuestionHeader: React.FC<QuestionHeaderProps> = ({
+  fieldNumber,
+  totalFields,
+  pigment,
   category,
   question,
   helperText,
 }) => {
   return (
-    <div className="text-left">
-      {category && (
-        <div className="inline-flex items-center gap-2 rounded-sm border border-accent/20 bg-accent/8 px-2.5 py-1 text-[0.6875rem] font-medium tracking-[0.18em] text-accent-bright uppercase">
-          <span aria-hidden="true" className="h-1 w-1 rounded-full bg-accent" />
-          {category}
-        </div>
-      )}
+    <div className="text-center">
+      <p className="caption flex items-center justify-center gap-2 text-faint">
+        <span
+          aria-hidden="true"
+          className="h-2.5 w-2.5 rounded-full"
+          style={{ backgroundColor: pigment.hex }}
+        />
+        <span data-numeric>
+          {String(fieldNumber).padStart(2, '0')} / {String(totalFields).padStart(2, '0')}
+        </span>
+        {category && <span className="text-muted">— {category}</span>}
+      </p>
 
-      <h1 className="mt-4 text-[1.75rem] leading-[1.12] font-semibold tracking-[-0.022em] text-white sm:text-4xl lg:text-[2.75rem]">
+      <h1 className="mt-4 text-[1.75rem] leading-[1.18] text-ink sm:text-[2.125rem]">
         {question}
       </h1>
 
       {helperText && (
-        <p className="mt-3 max-w-[54ch] text-sm leading-relaxed text-zinc-400 sm:text-base">
-          {helperText}
-        </p>
+        <p className="subheading mt-2 text-muted">{helperText}</p>
       )}
     </div>
   );

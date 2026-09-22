@@ -1,59 +1,53 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { RotateCcw, Check } from 'lucide-react';
 import { useOnboardingStore } from '../store/useOnboardingStore';
 import { mockOnboardingSteps } from '../data/mockSteps';
+import { pigmentForIndex } from '../theme/pigments';
 
 export const OnboardingCompleted: React.FC = () => {
   const { answers, history, lastSubmissionPayload, resetOnboarding } =
     useOnboardingStore();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: [0.22, 0.61, 0.36, 1] }}
-      className="pb-24 text-left"
-    >
-      <div className="inline-flex items-center gap-2 rounded-sm border border-positive/25 bg-positive/10 px-2.5 py-1 text-[0.6875rem] font-medium tracking-[0.18em] text-positive uppercase">
-        <Check className="h-3 w-3 stroke-[2.5]" />
-        Profile complete
+    <div className="pb-24">
+      <div className="text-center">
+        <p className="caption text-faint">All done</p>
+        <h1 className="mt-4 text-[1.75rem] leading-[1.18] text-ink sm:text-[2.125rem]">
+          Your fit profile
+        </h1>
+        <p className="subheading mt-2 text-muted">
+          {history.length} answers, saved on this device
+        </p>
       </div>
 
-      <h1 className="mt-4 text-[1.75rem] leading-[1.12] font-semibold tracking-[-0.022em] text-white sm:text-4xl">
-        Your fit profile is ready
-      </h1>
-      <p className="mt-3 max-w-[54ch] text-sm leading-relaxed text-zinc-400 sm:text-base">
-        {history.length} answers recorded. Your responses are saved on this
-        device, so you can come back and adjust any of them.
-      </p>
-
-      <dl className="mt-8 divide-y divide-line overflow-hidden rounded-panel border border-line bg-surface/60">
-        {mockOnboardingSteps.map((step) => {
+      <dl className="mt-10 flex flex-col gap-2.5">
+        {mockOnboardingSteps.map((step, index) => {
+          const pigment = pigmentForIndex(index);
           const selected = answers[step.id] ?? [];
           const selectedLabels = step.options
             .filter((option) => selected.includes(option.id))
             .map((option) => option.title);
 
           return (
-            <div key={step.id} className="px-5 py-4">
-              <dt className="text-xs leading-relaxed text-zinc-500">
-                {step.question}
+            <div key={step.id} className="rounded-tile bg-tile px-5 py-4">
+              <dt className="caption flex items-center gap-2 text-faint">
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: pigment.hex }}
+                />
+                {step.category ?? `Question ${index + 1}`}
               </dt>
-              <dd className="mt-2">
+              <dd className="mt-1.5">
                 {selectedLabels.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
+                  <ul className="space-y-0.5">
                     {selectedLabels.map((label) => (
-                      <span
-                        key={label}
-                        className="rounded-md border border-line bg-surface-raised px-2.5 py-1 text-xs text-zinc-200"
-                      >
+                      <li key={label} className="text-[1.0625rem] font-medium text-ink">
                         {label}
-                      </span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 ) : (
-                  <span className="text-xs text-zinc-600">Not answered</span>
+                  <span className="text-[0.9375rem] text-muted">Not answered</span>
                 )}
               </dd>
             </div>
@@ -63,23 +57,24 @@ export const OnboardingCompleted: React.FC = () => {
 
       {import.meta.env.DEV && (
         <details className="mt-4">
-          <summary className="cursor-pointer font-mono text-[0.6875rem] tracking-wide text-zinc-600 uppercase hover:text-zinc-400">
+          <summary className="caption cursor-pointer text-faint hover:text-muted">
             Cumulative payload (dev)
           </summary>
-          <pre className="mt-2 overflow-x-auto rounded-card border border-line bg-black/50 p-4 font-mono text-[0.6875rem] leading-relaxed text-zinc-300">
+          <pre className="mt-2 overflow-x-auto rounded-tile bg-tile p-4 font-mono text-xs leading-relaxed text-muted">
             {JSON.stringify(lastSubmissionPayload, null, 2)}
           </pre>
         </details>
       )}
 
-      <button
-        type="button"
-        onClick={resetOnboarding}
-        className="mt-6 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-panel border border-line bg-surface px-6 py-3.5 text-sm font-medium text-zinc-300 transition-colors duration-200 hover:border-line-strong hover:bg-surface-raised hover:text-white"
-      >
-        <RotateCcw className="h-4 w-4" />
-        Start over
-      </button>
-    </motion.div>
+      <div className="mt-10 flex justify-center">
+        <button
+          type="button"
+          onClick={resetOnboarding}
+          className="caption min-h-12 cursor-pointer rounded-pill border border-ink/25 px-8 text-ink transition-colors duration-200 ease-soft hover:bg-tile"
+        >
+          Start over
+        </button>
+      </div>
+    </div>
   );
 };

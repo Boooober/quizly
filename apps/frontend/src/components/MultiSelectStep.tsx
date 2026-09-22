@@ -1,8 +1,7 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
 import type { OnboardingStepUI } from '../types/onboarding';
 import { useOnboardingStore } from '../store/useOnboardingStore';
-import { OptionCard } from './OptionCard';
+import { OptionTile } from './OptionTile';
 
 interface MultiSelectStepProps {
   step: OnboardingStepUI;
@@ -29,30 +28,23 @@ export const MultiSelectStep: React.FC<MultiSelectStepProps> = ({
   };
 
   return (
-    <div className="pt-7 pb-36">
-      <div className="flex items-baseline justify-between px-0.5 pb-3 text-xs text-zinc-500">
-        <span className="tracking-wide">Select any that apply</span>
+    <div className="mt-10 pb-36">
+      <div className="mb-3 flex items-center justify-between px-1">
+        <span className="caption text-faint">Select all that apply</span>
         <span
           data-numeric
           aria-live="polite"
-          className={`font-mono transition-colors ${
-            hasSelection ? 'text-accent-bright' : 'text-zinc-600'
-          }`}
+          className={`caption ${hasSelection ? 'text-accent' : 'text-faint'}`}
         >
-          {selectedIds.length} selected
+          {String(selectedIds.length).padStart(2, '0')} selected
         </span>
       </div>
 
-      <div
-        role="group"
-        aria-label={step.question}
-        className="flex flex-col gap-3"
-      >
-        {step.options.map((option, index) => (
-          <OptionCard
+      <div role="group" aria-label={step.question} className="flex flex-col gap-2.5">
+        {step.options.map((option) => (
+          <OptionTile
             key={option.id}
             option={option}
-            index={index}
             control="checkbox"
             isSelected={selectedIds.includes(option.id)}
             onSelect={() => toggleDraftOption(step.id, option.id)}
@@ -61,20 +53,19 @@ export const MultiSelectStep: React.FC<MultiSelectStepProps> = ({
       </div>
 
       {/* Commit bar: pinned so the CTA never drifts below the fold */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-canvas/85 px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:px-6">
+      <div className="fixed inset-x-0 bottom-0 z-30 bg-page px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6">
         <div className="mx-auto max-w-xl">
           <button
             type="button"
             onClick={handleContinue}
             disabled={!hasSelection}
-            className={`inline-flex w-full items-center justify-center gap-2 rounded-panel px-6 py-4 text-base font-medium transition-all duration-200 ${
+            className={`inline-flex min-h-14 w-full items-center justify-center rounded-pill px-6 text-[1.0625rem] font-medium transition-colors duration-200 ease-soft ${
               hasSelection
-                ? 'cursor-pointer bg-accent text-accent-ink shadow-accent hover:bg-accent-bright active:scale-[0.99]'
-                : 'cursor-not-allowed border border-line bg-surface text-zinc-600'
+                ? 'cursor-pointer bg-ink text-page hover:bg-accent-strong'
+                : 'cursor-not-allowed bg-tile text-faint'
             }`}
           >
-            <span>Continue</span>
-            <ArrowRight className="h-4 w-4 stroke-2" />
+            Continue
           </button>
         </div>
       </div>

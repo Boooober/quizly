@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { OnboardingStepUI } from '../types/onboarding';
 import { useOnboardingStore } from '../store/useOnboardingStore';
-import { OptionCard } from './OptionCard';
+import { OptionTile } from './OptionTile';
 
 interface SingleSelectStepProps {
   step: OnboardingStepUI;
@@ -30,7 +30,7 @@ export const SingleSelectStep: React.FC<SingleSelectStepProps> = ({
 
   const handleSelect = (optionId: string) => {
     setPendingOptionId(optionId);
-    // Tactile delay so the selected state is visible before the step advances
+    // Brief hold so the selected state registers before the step advances
     advanceTimer.current = setTimeout(() => {
       selectSingleOption(step.id, optionId, totalSteps);
       setPendingOptionId(null);
@@ -41,13 +41,12 @@ export const SingleSelectStep: React.FC<SingleSelectStepProps> = ({
     <div
       role="radiogroup"
       aria-label={step.question}
-      className="flex flex-col gap-3 pt-7"
+      className="mt-10 flex flex-col gap-2.5"
     >
-      {step.options.map((option, index) => (
-        <OptionCard
+      {step.options.map((option) => (
+        <OptionTile
           key={option.id}
           option={option}
-          index={index}
           control="radio"
           disabled={pendingOptionId !== null}
           isSelected={

@@ -3,6 +3,12 @@
 
 Quizly is an adaptive, conversion-focused quiz funnel engineered to maximize sunglasses sales. It couples an intelligent AI diagnostic agent running on Google Cloud's **Vertex AI Agent Engine** (Reasoning Engine) with an instant, real-time client-side **MediaPipe 2D Visual Try-On (VTO)** engine.
 
+#### Project Architecture & Methodology Documentation:
+- [quizly-agent-architecture.md](file:///Users/mykytaslobodian/projects/quizly/quizly-agent-architecture.md) — Core Cloud Architecture, Datastore & Decision Loops
+- [quizly-psychometric-methodology.md](file:///Users/mykytaslobodian/projects/quizly/quizly-psychometric-methodology.md) — 2-Axis (Intent vs. Contradiction) Churn Detection & Backend Steering Engine
+- [quizly-question-framework.md](file:///Users/mykytaslobodian/projects/quizly/quizly-question-framework.md) — 4-Pillar Question Framework & 32-Question Catalog
+- [sunglasses_design_ontology.md](file:///Users/mykytaslobodian/projects/quizly/sunglasses_design_ontology.md) — 16-Dimensional Design Ontology & Cephalometrics
+
 ---
 
 ### 1. Architectural Highlights

@@ -1,29 +1,40 @@
 @import "tailwindcss";
 
+/*
+ * UI pattern follows the eyewear retail references: near-white page, flat
+ * filled tiles with no border or shadow, letterspaced uppercase captions,
+ * centered section headers with a light italic-serif subtitle, pill CTAs.
+ * Palette stays on the greige/slate/pigment family from the moodboards.
+ */
 @theme {
-  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
 
-  /* One neutral family (cool charcoal) + one accent. Nothing else. */
-  --color-canvas: #0a0b0e;
-  --color-surface: #101217;
-  --color-surface-raised: #15181e;
-  --color-line: #ffffff14;
-  --color-line-strong: #ffffff2e;
+  --color-page: #f7f5f1;      /* near-white ground */
+  --color-tile: #ebe7e0;      /* flat product-tile fill */
+  --color-tile-hover: #e4dfd7;
+  --color-rule: #ded9d1;
+  --color-control: #7b7567;   /* 3.7:1 on tile */
 
-  --color-accent: #e3a94a;
-  --color-accent-bright: #f0bd67;
-  --color-accent-ink: #14100a;
-  --color-positive: #5aa789;
+  --color-ink: #1c1b18;       /* 15.8:1 on page */
+  --color-muted: #5a564e;     /*  6.7:1 on page */
+  --color-faint: #625d54;     /*  6.0:1 on page */
 
-  --radius-card: 0.875rem;
-  --radius-panel: 1.25rem;
+  --color-accent: #526074;
+  --color-accent-strong: #3d4a61;
+  --color-accent-ink: #ffffff;
+  --color-accent-tint: #dfe4ea;
 
-  /* Tinted, single light source (above), never pure black */
-  --shadow-card: 0 1px 2px #05060899, 0 8px 24px -12px #050608cc;
-  --shadow-accent: 0 0 0 1px #e3a94a3d, 0 10px 32px -14px #e3a94a80;
+  /* Categorical pigments, hex values printed on the reference board */
+  --color-pigment-slate: #526074;
+  --color-pigment-red: #841919;
+  --color-pigment-olive: #7e8963;
+  --color-pigment-brown: #904b2b;
 
-  --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --radius-tile: 0.75rem;
+  --radius-pill: 999px;
+
+  --ease-soft: cubic-bezier(0.32, 0.72, 0.29, 1);
 }
 
 @layer base {
@@ -35,45 +46,21 @@
   body {
     margin: 0;
     min-height: 100dvh;
-    background-color: var(--color-canvas);
-    color: #ececee;
+    background-color: var(--color-page);
+    color: var(--color-ink);
     font-family: var(--font-sans);
+    /* 17px base: the audience skews 40+, small type fails first */
+    font-size: 1.0625rem;
+    line-height: 1.6;
     font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  /* Ambient depth: one off-centre light source, not a flat fill */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(70rem 40rem at 18% -10%, #e3a94a14, transparent 62%),
-      radial-gradient(50rem 34rem at 96% 8%, #6f7fa314, transparent 60%);
-  }
-
-  /* Grain: breaks the digital flatness of large dark surfaces */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    opacity: 0.035;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  #root {
-    position: relative;
-    z-index: 2;
   }
 
   h1,
   h2 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
     text-wrap: balance;
   }
 
@@ -81,22 +68,20 @@
     text-wrap: pretty;
   }
 
-  /* Numbers must not jitter as counters tick */
   [data-numeric] {
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
   }
 
-  /* Keyboard focus is a requirement, not decoration */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 3px;
-    border-radius: 2px;
+    border-radius: 0.375rem;
   }
 
   ::selection {
-    background: var(--color-accent);
-    color: var(--color-accent-ink);
+    background: var(--color-accent-tint);
+    color: var(--color-ink);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -118,15 +103,32 @@
   left: 0.75rem;
   top: 0.75rem;
   z-index: 100;
-  transform: translateY(-160%);
-  border-radius: 0.5rem;
-  background: var(--color-accent);
-  color: var(--color-accent-ink);
-  padding: 0.5rem 0.875rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
+  transform: translateY(-180%);
+  border-radius: var(--radius-pill);
+  background: var(--color-ink);
+  color: #fff;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
 
   &:focus-visible {
     transform: translateY(0);
   }
+}
+
+/* Tiny letterspaced label above a title — the references' category caption */
+@utility caption {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Light italic serif line under a heading, as on the retail reference */
+@utility subheading {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
 }

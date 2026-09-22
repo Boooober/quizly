@@ -18,17 +18,17 @@ export const PayloadInspector: React.FC = () => {
   return (
     // Docked top-right: the bottom edge belongs to the primary CTA
     <aside className="fixed top-20 right-3 z-30 w-[min(24rem,calc(100vw-1.5rem))]">
-      <div className="overflow-hidden rounded-card border border-line bg-canvas/92 shadow-card backdrop-blur-xl">
+      <div className="overflow-hidden rounded-tile border border-rule bg-page">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           aria-expanded={isOpen}
-          className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 font-mono text-[0.6875rem] text-zinc-400 transition-colors hover:text-zinc-200"
+          className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 caption text-muted transition-colors hover:text-ink"
         >
           <span className="flex items-center gap-2">
             <Terminal className="h-3.5 w-3.5 text-accent" />
             state inspector
-            <span data-numeric className="text-zinc-600">
+            <span data-numeric className="text-faint">
               {answersCount} answered
             </span>
           </span>
@@ -40,11 +40,11 @@ export const PayloadInspector: React.FC = () => {
         </button>
 
         {isOpen && (
-          <div className="max-h-72 space-y-2 overflow-y-auto border-t border-line p-3 text-left">
-            <p className="font-mono text-[0.625rem] tracking-wide text-zinc-500 uppercase">
+          <div className="max-h-72 space-y-2 overflow-y-auto border-t border-rule p-3 text-left">
+            <p className="caption text-faint">
               Last submission payload
             </p>
-            <pre className="overflow-x-auto rounded-md bg-black/50 p-2.5 font-mono text-[0.6875rem] leading-relaxed text-zinc-300">
+            <pre className="overflow-x-auto rounded-md bg-tile p-2.5 font-mono text-[0.6875rem] leading-relaxed text-muted">
               {JSON.stringify(
                 lastSubmissionPayload ?? {
                   status: 'no submission yet',
